@@ -11,9 +11,9 @@
 <link rel="icon" href="favicon-32.png" sizes="32x32" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Chapter Guide" />
-<meta name="theme-color" content="#0B0F1A" />
-<title>Chapter Guide</title>
+<meta name="apple-mobile-web-app-title" content="WriteNow" />
+<meta name="theme-color" content="#12151C" />
+<title>WriteNow</title>
 <style>
   /* Font roles. No @import, no @font-face, no network request of any kind.
      The named face is used when present on the device; otherwise each role
@@ -1567,7 +1567,7 @@
   <header class="masthead">
     <div class="masthead-inner">
       <div class="mast-title-block">
-        <div class="eyebrow">Chapter Guide · Working Draft</div>
+        <div class="eyebrow">WriteNow · Working Draft</div>
         <input class="title-input" id="title" placeholder="PROJECT TITLE" />
       </div>
       <div class="meta-row">
@@ -1601,7 +1601,7 @@
     <div id="viewChapters" style="display:none">
       <div id="emptyState" class="empty" style="display:none">
         <div class="big">Chapter one awaits</div>
-        <div class="small">Add a chapter. Name its purpose, set the scene, decide how it opens and how it ends.</div>
+        <div class="small">Add a chapter and name what it's for. Then set the scene, and decide how it opens and where it leaves the reader.</div>
       </div>
       <div class="chap-bar" id="chapBar">
         <button class="tf-btn" id="chapFoldAll">Collapse all</button>
@@ -1663,7 +1663,7 @@
           <div class="btn-row">
             <button class="tf-btn" id="ctCancel">Cancel</button>
             <span class="btn-spacer"></span>
-            <button class="write-btn" id="ctSave">Save Theme</button>
+            <button class="write-btn" id="ctSave">Save theme</button>
           </div>
           <div class="set-note" id="ctNote"></div>
         </div>
@@ -1671,13 +1671,13 @@
 
       <div class="set-card" data-cat="backup">
         <h3>Save to a file</h3>
-        <div class="set-row-cap" style="margin:0 0 10px">Every auto-save also writes to a file you choose</div>
+        <div class="set-row-cap" style="margin:0 0 10px">Pick a file and the app keeps it up to date every time it saves.</div>
         <div id="fileSaveBody"></div>
         <div class="set-note" id="fileSaveNote"></div>
       </div>
 
       <div class="set-card" data-cat="general">
-        <h3>App</h3>
+        <h3>General</h3>
         <label class="set-row">
           <span class="set-row-text"><span class="set-row-label">Haptics</span></span>
           <input type="checkbox" class="sw" id="hapticSwitch" />
@@ -1688,7 +1688,7 @@
         </label>
         <label class="set-row" id="splitRow">
           <span class="set-row-text"><span class="set-row-label">Split view</span>
-            <span class="set-row-cap">Codex beside your work on wide screens</span></span>
+            <span class="set-row-cap">Keeps the codex open beside your work when the screen is wide enough.</span></span>
           <input type="checkbox" class="sw" id="splitSwitch" />
         </label>
         <button type="button" class="set-row" id="tourRow">
@@ -1706,14 +1706,14 @@
 
       <div class="set-card" data-cat="schedule">
         <h3>Schedule</h3>
-        <div class="set-row-cap" style="margin:0 0 10px">Days off the schedule never count as missed</div>
+        <div class="set-row-cap" style="margin:0 0 10px">Days you didn't schedule don't count against you.</div>
         <div id="schedBody"></div>
         <div class="set-note" id="schedNote"></div>
       </div>
 
       <div class="set-card" data-cat="rewards">
         <h3>Rewards</h3>
-        <div class="set-row-cap" style="margin:0 0 10px">Banked periods, not current streak. A break erases nothing</div>
+        <div class="set-row-cap" style="margin:0 0 10px">This counts the weeks you've kept, not your current run. Missing one doesn't erase the others.</div>
         <div id="rewardBody"></div>
         <div class="set-note" id="rewardNote"></div>
       </div>
@@ -1726,25 +1726,25 @@
 
       <div class="set-card" data-cat="backup">
         <h3>Backup</h3>
-        <div class="set-row-cap" style="margin:0 0 10px">Everything lives on this device only.</div>
+        <div class="set-row-cap" style="margin:0 0 10px">Your writing is stored on this device and nowhere else.</div>
         <div class="btn-row">
           <button class="set-btn" id="backupCopy">Copy backup</button>
           <button class="set-btn" id="backupDownload">Download backup</button>
         </div>
         <div class="set-note" id="backupNote"></div>
-        <div class="field-label gap-top">Restore — paste a backup below, or choose a file</div>
+        <div class="field-label gap-top">Paste a backup below, or choose a file.</div>
         <textarea class="restore-area" id="restoreArea" placeholder='Paste backup text here…'></textarea>
         <div class="btn-row">
-          <button class="set-btn" id="restoreBtn">Restore From Text</button>
+          <button class="set-btn" id="restoreBtn">From text</button>
           <input type="file" id="restoreFile" accept=".json,application/json,text/plain" style="display:none" />
-          <button class="set-btn" id="restoreFileBtn">Restore From File</button>
+          <button class="set-btn" id="restoreFileBtn">From a file</button>
         </div>
         <div class="set-note" id="restoreNote"></div>
       </div>
 
       <div class="set-card" data-cat="backup">
         <h3>Merge codex</h3>
-        <div class="set-row-cap" style="margin:0 0 10px">Never overwrites an entry you already have</div>
+        <div class="set-row-cap" style="margin:0 0 10px">Anything already in your codex stays as it is.</div>
         <textarea class="restore-area" id="mergeArea" placeholder='Paste a merge file here…'></textarea>
         <div class="btn-row">
           <button class="set-btn" id="mergeBtn">From text</button>
@@ -1757,7 +1757,7 @@
 
       <div class="set-card" data-cat="backup">
         <h3 style="color:var(--red)">Erase</h3>
-        <div class="set-row-cap" style="margin:0 0 10px">Erases everything on this device. No undo.</div>
+        <div class="set-row-cap" style="margin:0 0 10px">This erases every chapter, note, and codex entry on this device. You can't undo it.</div>
         <button class="set-btn danger" id="clearBtn">Erase everything</button>
       </div>
     </div>
@@ -1769,12 +1769,12 @@
         <button class="tf-btn" id="mapAdd">+ Note</button>
         <button class="tf-btn" id="noteFoldAll">Collapse all</button>
         <button class="tf-btn" id="noteCopy">Copy outline</button>
-        <span class="map-hint" id="mapHint">Tap a note to write. + adds one underneath.</span>
+        <span class="map-hint" id="mapHint">Tap a note to write in it. The + adds another one underneath.</span>
       </div>
       <div class="notes-list" id="notesList"></div>
       <div class="notes-empty" id="notesEmpty">
         <h2>A blank page</h2>
-        <p>Put down the first idea. A character, an image, a question you can't answer yet. Add notes underneath as the shape appears.</p>
+        <p>Put down the first idea, whatever it is. A character, an image, a question you can't answer yet. Add notes underneath it as the shape starts to show.</p>
       </div>
       <div class="set-note" id="mapCopyNote"></div>
     </div>
@@ -2038,7 +2038,7 @@
   ];
 
   var GUIDE = [
-    ["Every chapter is a miniature story", "Sanderson's model: each chapter has its own arc — a hook in, rising tension, a turn or small payoff, and a hook out. A reader should feel something was attempted and something changed, even if the larger plot only moved one step.", "<div class=\"g-sec\"><div class=\"g-sec-label\">Why it works</div><p>Novels are read in sessions, not one sitting — readers stop at chapter breaks because that's where the structure gives them permission to. A chapter with no internal shape, just incident until the word count runs out, doesn't reward the reader for having read it. Satisfaction comes from completed micro-arcs, not just the eventual macro-arc — a book that's satisfying chapter by chapter is a book people actually finish, because every stopping point still felt worth arriving at.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">How to do it</div><p>Before drafting, answer this: what does the POV character want at the start of the chapter, and what's different about that want — achieved, denied, complicated, or replaced — by the end? That's the chapter's own arc, independent of the book's plot arc. A chapter can fail its immediate goal and still succeed structurally, as long as the failure changes something.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">In Mistborn</div><p>Brandon Sanderson gives even a single heist-planning meeting its own shape in Mistborn — Kelsier's crew argues, a plan solidifies, and someone's loyalty gets tested, all before the larger job even begins. The chapter would work as a satisfying scene even if the book stopped there, which is exactly the point.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">Common mistake</div><p>Treating connective chapters — travel, transition, setup — as exempt from having their own arc because “it's just getting characters from A to B.” Readers can feel a chapter that exists purely for logistics; it's the chapter they skim. Every chapter, transitional ones included, needs its own small question that gets answered.</p></div>"],
+    ["Every chapter is a miniature story", "Every chapter should have its own arc. Something pulls the reader in, the tension builds, something turns, and the ending hands them to the next chapter. By the end they should feel that something was attempted and something changed, even if the larger plot only moved an inch.", "<div class=\"g-sec\"><div class=\"g-sec-label\">Why it works</div><p>People read novels in sessions, not in one sitting. They stop at chapter breaks because that's where the structure gives them permission to stop. A chapter with no shape of its own, just incident until the word count runs out, gives the reader nothing for having finished it. The books people finish are the ones where every stopping point felt worth reaching.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">How to do it</div><p>Before you draft, answer one question. What does your POV character want when the chapter opens, and what has happened to that want by the time it closes? It might be achieved, denied, complicated, or swapped for something else. Any of those will do. What you're looking for is change, and a chapter can fail its own goal completely and still work, as long as the failure leaves things different.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">In Mistborn</div><p>Sanderson gives even a planning meeting its own shape. Kelsier's crew argues, a plan hardens, and someone's loyalty gets tested, all before the job itself has begun. Read that chapter on its own and it still works as a scene. That's the test.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">Common mistake</div><p>Letting the connective chapters off the hook. Travel, transitions, setup: it's tempting to think these are just moving people from A to B. Readers can feel a chapter that exists for logistics, and that's the one they skim. Give the transitional chapters a small question of their own and answer it before the chapter ends.</p></div>"],
     ["End on the hook — cliffhang relentlessly", "Close every chapter on a question, a reveal, a decision, or a door opening — the moment BEFORE resolution, not after. The chapter break is where readers decide to keep reading. Never end at a comfortable resting place.", "<div class=\"g-sec\"><div class=\"g-sec-label\">Why it works</div><p>Chapter endings are the one moment a reader consciously decides whether to keep going or put the book down. A resolved, comfortable ending gives their brain permission to stop — the tension holding their attention releases, and “one more chapter” quietly becomes “I’ll pick it up tomorrow.” An open loop does the opposite. It’s the Zeigarnik effect: unfinished things stay active in memory far more insistently than finished ones. You’re not tricking the reader — you’re working with how attention actually behaves.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">How to do it</div><p>A hook doesn’t have to be a literal cliff-edge. It can be a question, a reveal, a decision about to be made but not yet shown, or a door — literal or otherwise — opening onto something new. What it can’t be is a scene that resolves: the fight ends, they get some sleep, the conversation reaches agreement. Before you close a chapter, ask yourself one question — if a reader stopped reading right here, would they feel satisfied, or unsettled? You want unsettled.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">In The Da Vinci Code</div><p>Dan Brown's chapters routinely run two or three pages, and nearly every one ends mid-revelation or on a reversal, sometimes cutting away from a POV entirely at the worst possible moment. It's often cited as overused, but the underlying mechanism is the same one every thriller relies on: don't let the reader exhale.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">Common mistake</div><p>A manufactured cliffhanger with no real stakes attached — ending on “and then the door creaked open” when nothing about the door actually matters — is a trick readers learn to spot fast. The hook has to be attached to something the reader already cares about, a question they want answered or a character they’re worried for, or it just reads as a gimmick.</p></div>"],
     ["Start late, in motion", "Open as close to the interesting moment as possible — mid-scene, mid-problem, mid-conversation. The opening line should make a promise about what this chapter will attempt.", "<div class=\"g-sec\"><div class=\"g-sec-label\">Why it works</div><p>Every line a reader has to get through before something is at stake is a line where they could put the book down instead. Orientation — where are we, who is this, what led here — is necessary, but it isn't what holds attention; conflict and forward motion are. Starting late means the reader gets oriented through the action, absorbing context as a side effect of following something that matters, instead of absorbing it as homework before the “real” chapter begins.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">How to do it</div><p>Find the latest possible moment the chapter could start and still make sense — then start there. If the instinct is to open with a character waking up, walking somewhere, or thinking about their situation before anything happens, cut it. Start at the first moment something is already in motion: a conversation already underway, a decision already forced, a door already opening. Backstory can be folded in a sentence at a time, later, once the reader already wants to know it.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">In The Hunger Games</div><p>Suzanne Collins opens with Katniss already awake, already reaching across the bed for a sister who isn't there — not with an explanation of Panem, the Games, or the reaping. The reader learns the world by watching someone already living urgently inside it.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">Common mistake</div><p>Confusing “in motion” with “high action.” A quiet chapter can start late too. The key isn't explosions, it's that something is already underway that the reader has to catch up to, rather than something being set up that hasn't started yet. A conversation that opens mid-argument is in motion; one that opens with two people sitting down and greeting each other is not, even if the argument that follows is intense.</p></div>"],
     ["Ground every scene — setting is a character", "Readers need to know where they are within a paragraph: place, light, temperature, who's present. Use the Setting field so each chapter knows its stage before the actors speak.", "<div class=\"g-sec\"><div class=\"g-sec-label\">Why it works</div><p>An ungrounded scene reads as dialogue floating in white space — readers can follow what is said but can't feel it, because feeling requires a body to be somewhere. Setting isn't decoration; it tells the reader how to weight everything that happens — a confession said in a crowded hall lands differently than the same words said in an empty room. Skipping it doesn't speed the scene up, it just makes the scene less real while it's happening.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">How to do it</div><p>You don't need paragraphs — you need two or three concrete, specific sensory details, placed early, that do double duty establishing place and mood and, ideally, foreshadowing tone. Light and temperature are the fastest levers: readers orient almost instantly to cold-and-dim versus hot-and-bright, and every scene benefits from picking one deliberately instead of defaulting to neutral.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">In A Game of Thrones</div><p>George R.R. Martin rarely stops to describe a room — the cold at Winterfell, the stink of King's Landing, the way characters register temperature and smell while doing something else entirely, arrives a detail at a time, attached to whoever's paying attention to it.</p></div><div class=\"g-sec\"><div class=\"g-sec-label\">Common mistake</div><p>Front-loading a setting description as a static paragraph before the scene starts, then never returning to it. Setting should recur — a detail mentioned at the opening (the cold, the echo, a smell) should resurface once or twice as the scene develops, so the space stays alive instead of being scenery described once and then forgotten.</p></div>"],
@@ -2181,19 +2181,35 @@
       body: "You do not owe today a chapter. A sentence that was not there this morning is the entire job. The outline fields are built to be filled in slowly, across many sittings — nothing here expects you to arrive with the whole thing finished." },
     { title: "So \u2014 which days?", section: "Your schedule", intro: true, schedule: true, view: null, target: null,
       body: "Pick the days you actually intend to write. You can change this any time in Settings, and switch to a weekly word target instead if that suits you better." },
-    { title: "Welcome to Chapter Guide", section: "The four stages", body: "Four stages, in order: Notes to think, Chapters to outline and draft, Codex to keep it straight, Book to compile it. A few quick stops, each pointing at where it lives.", view: null, target: null },
-    { title: "Start with a note", section: "Notes", body: "Tap + Note and write the idea down. The + beside any note adds one underneath. That one gets its own, so a thought can branch as far as it needs to.", view: "map", target: "#mapAdd" },
-    { title: "Shape it as you go", section: "Notes", body: "Tap a note for its controls: add one after it, change its level, or make it a checkbox. The caret on the left collapses a branch.", view: "map", target: "#noteFoldAll" },
-    { title: "Start with a chapter", section: "Chapters", body: "Five fields: Purpose, Setting, Opens, The Middle, Ends. Fill in what you know. Leave the rest.", view: "chapters", target: "#addBtn" },
-    { title: "Write with context, not blind", section: "Chapters", body: "Write opens the full-screen editor. Its sidebar holds this chapter's outline and the craft reference.", view: "chapters", target: null },
-    { title: "A world that indexes itself", section: "Codex", body: "Characters, places, items. Once an entry exists, its name is marked wherever you write it. Select a new name and press Cmd/Ctrl+K to add it without leaving the page.", view: "codex", target: "#addEntryBtn" },
-    { title: "Compile it into one manuscript", section: "Book", body: "Every drafted chapter in order, with numbering and scene breaks. Copy it, or download Markdown or HTML.", view: "book", target: "#bookCopy" },
-    { title: "A teacher built into the tool", section: "Craft", body: "Story-craft principles, on every tab. Tap a lesson to open a worked example.", view: null, target: "#guide .g-item .g-head",
+    { title: "Welcome to WriteNow", section: "The four stages", body: "Four stages, in order: Notes to think, Chapters to outline and draft, Codex to keep it straight, Book to compile it. A few quick stops, each pointing at where it lives.", view: null, target: null },
+    { title: "Start with a note", section: "Notes", body: "Tap + Note and write the idea down. The + beside any note adds another one under it, and that one gets its own +, so you can follow a thought as far down as it goes.", view: "map", target: "#mapAdd" },
+    { title: "Shape it as you go", section: "Notes", body: "Tapping a note brings up its controls. You can add another after it, push it in or pull it out a level, or turn it into a checkbox. The caret on the left folds a branch away when you're done with it.", view: "map", target: "#noteFoldAll" },
+    { title: "Start with a chapter", section: "Chapters", body: "Each chapter has five fields: Purpose, Setting, Opens, The Middle, Ends. Fill in whatever you know now and leave the rest alone. They're prompts, not a form to complete.", view: "chapters", target: "#addBtn" },
+    { title: "Fold what's settled", section: "Chapters",
+      body: "Once a field is settled you can fold it to a single line. The caret beside a chapter title folds the whole chapter, so a book of ten reads as ten lines when you want to see the shape.",
+      view: "chapters", target: "#chapFoldAll" },
+    { title: "Write with context, not blind", section: "Chapters", body: "Write opens the full-screen editor. The sidebar keeps this chapter's outline on one tab and the craft reference on the other, so you can check either without leaving the page.", view: "chapters", target: null },
+    { title: "A world that indexes itself", section: "Codex", body: "Characters, places, items. Once you've made an entry, the app marks that name everywhere you write it. If you've just invented a name, select it and press Cmd/Ctrl+K to add it without breaking off.", view: "codex", target: "#addEntryBtn" },
+    { title: "Compile it into one manuscript", section: "Book", body: "This puts every drafted chapter in order, numbered, with the scene breaks in place. Copy it out, or download it as Markdown or HTML.", view: "book", target: "#bookCopy" },
+    { title: "A teacher built into the tool", section: "Craft", body: "The Craft Guide sits on every tab. Each lesson opens into an example from a published novel.", view: null, target: "#guide .g-item .g-head",
       onEnter: function () { setGuideOpen(true); } },
-    { title: "Set the mood", section: "Making it yours", body: "Themes, accent colour, and the type settings for the writing screen.", view: "settings", target: "#themeRow" },
-    { title: "Your book lives on this device", section: "Making it yours", body: "One file with everything in it. Do it often. Merge codex, below, adds entries without overwriting.", view: "settings", target: "#backupCopy" },
-    { title: "This is example content", section: "Making it yours", body: "The notes, chapters and codex entries you just saw are an example, so nothing started blank. Clear it from Settings. That removes only the example.", view: null, target: null },
-    { title: "That's the whole tool", section: "Making it yours", body: "Start in Notes, or go straight to a chapter. Nothing has to happen in order.", view: null, target: null }
+    { title: "Settings, by category", section: "Making it yours",
+      body: "Five groups. Appearance holds the themes \u2014 four now, the rest earned as you keep the schedule.",
+      view: "settings", target: "#setRoot",
+      onEnter: function () { closeSetPage(); } },
+    { title: "Themes", section: "Making it yours",
+      body: "Auto follows your device between light and dark. Choose a theme yourself and it stays where you put it.",
+      view: "settings", target: "#themeRow",
+      onEnter: function () { openSetPage("appearance"); } },
+    { title: "Your book lives on this device", section: "Making it yours",
+      body: "None of this is on a server. Copy a backup regularly and keep the file somewhere other than this device.",
+      view: "settings", target: "#backupCopy",
+      onEnter: function () { openSetPage("backup"); } },
+    { title: "This is example content", section: "Making it yours", body: "The notes, chapters and codex entries you've been looking at are an example, so that nothing started out blank. You can clear it from Settings whenever you like. That removes the example and nothing else.", view: null, target: null },
+    { title: "A check-in each day", section: "Making it yours",
+      body: "Once a day when you open the app, it tells you what changed since last time and offers to save a copy. Nothing else interrupts you.",
+      view: null, target: null },
+    { title: "That's the whole tool", section: "Making it yours", body: "Start in Notes, or go straight to a chapter. Nothing here has to happen in order.", view: null, target: null }
   ];
 
   var state = { title: "", chapters: [], codex: [], customTypes: [], ledger: [], writingDays: {}, dailyWords: {}, wordBaseline: null, sessionSnap: null, consistency: null, unlocked: null, customThemes: [], map: { nodes: [], edges: [], frames: [], view: { x: 0, y: 0, z: 1 } }, settings: { theme: "ink", draftFont: 17, draftLine: 18, accent: null, splitOn: false, splitPos: 50, splitRight: "codex", lastView: null, themeAuto: true, resumeChapter: true, lastChapterId: null, haptics: true } };  /* a file with NO saved state is genuinely new — follow the system. An existing blob without the flag resolves to false on load, so nobody is re-themed underneath them. */
@@ -2497,7 +2513,7 @@
       .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "chapter-guide";
     window.showSaveFilePicker({
       suggestedName: name + ".json",
-      types: [{ description: "Chapter Guide backup", accept: { "application/json": [".json"] } }]
+      types: [{ description: "WriteNow backup", accept: { "application/json": [".json"] } }]
     }).then(function (h) {
       fileHandle = h;
       fileSaveState = "linked";
@@ -2752,10 +2768,10 @@
 
   /* One line, in the app's usual register — an editor's remark, not a cheer. */
   function recapLine(h, streakAfter) {
-    if (h.graceUsed) return "A week missed, and the streak held. That is exactly what the grace was for.";
-    if (!h.hit && streakAfter === 0) return "The streak reset. The words already written did not.";
+    if (h.graceUsed) return "You missed a week and the streak held. That's what the grace was there for.";
+    if (!h.hit && streakAfter === 0) return "The streak went back to zero. The words you already wrote didn't.";
     if (!h.hit) return "A quiet week. The next one starts clean.";
-    if (streakAfter === 1) return "One period down. The habit starts by being unremarkable.";
+    if (streakAfter === 1) return "One week down. Habits start out feeling like nothing much.";
     if (streakAfter >= 26) return streakAfter + " periods running. This is no longer an experiment.";
     if (streakAfter >= 8) return streakAfter + " in a row. The schedule is doing the work now.";
     return streakAfter + " in a row.";
@@ -2852,12 +2868,12 @@
   /* Plain, and never congratulatory about a day that did not happen. */
   function dailyLine(did, d, c, st) {
     if (!did) {
-      if (c.enabled && c.days.indexOf(new Date().getDay()) !== -1) return "Today is on your schedule.";
-      return "Nothing owed today.";
+      if (c.enabled && c.days.indexOf(new Date().getDay()) !== -1) return "Today is one of your writing days.";
+      return "You don't owe today anything.";
     }
-    if (d.words >= 1000) return "A long session. Worth backing up.";
-    if (d.words > 0) return "The draft moved.";
-    return "The plan moved, even if the draft did not.";
+    if (d.words >= 1000) return "That was a long session. Worth saving a copy.";
+    if (d.words > 0) return "The draft moved today.";
+    return "The plan moved, even if the prose didn't.";
   }
 
   function closeDaily() {
@@ -4729,14 +4745,14 @@
       fsBody.innerHTML = "";
       if (!fileSaveSupported()) {
         fsNote.className = "set-note";
-        fsNote.textContent = "Safari can't write to a file you choose, on iPad or Mac. Your work is still saved on this device. Use Copy backup for a copy you control.";
+        fsNote.textContent = "Safari doesn't let a web page write to a file you choose, on iPad or on Mac. Use Copy backup instead and keep the text somewhere safe.";
       } else if (fileSaveState === "linked") {
         var un = document.createElement("button");
         un.className = "set-btn"; un.textContent = "Stop saving there";
         un.addEventListener("click", unlinkSaveFile);
         fsBody.appendChild(un);
         fsNote.className = "set-note ok";
-        fsNote.textContent = "Linked. Auto-save writes there too.";
+        fsNote.textContent = "Linked. Every save writes to that file as well.";
       } else if (fileSaveState === "denied") {
         var re = document.createElement("button");
         re.className = "set-btn"; re.textContent = "Reconnect";
@@ -4749,14 +4765,14 @@
         });
         fsBody.appendChild(re);
         fsNote.className = "set-note err";
-        fsNote.textContent = "The browser dropped write permission on restart. Nothing has been written since.";
+        fsNote.textContent = "The browser gave up write permission when it restarted, so nothing has been written since. One tap puts it back.";
       } else {
         var pick = document.createElement("button");
         pick.className = "set-btn"; pick.textContent = "Choose a file";
         pick.addEventListener("click", linkSaveFile);
         fsBody.appendChild(pick);
         fsNote.className = "set-note";
-        fsNote.textContent = "Pick a file once. It stays current after that.";
+        fsNote.textContent = "Choose a file once and the app keeps it current from then on.";
       }
     }
 
@@ -4797,8 +4813,8 @@
       if (srow) srow.style.opacity = ss.disabled ? "0.45" : "";
       var scap = srow ? srow.querySelector(".set-row-cap") : null;
       if (scap) scap.textContent = ss.disabled
-        ? "Needs a wider screen"
-        : "Codex beside your work";
+        ? "Your screen is too narrow for this."
+        : "Keeps the codex open beside your work.";
       ss.onchange = function () {
         state.settings.splitOn = ss.checked;
         save();
@@ -4950,7 +4966,7 @@
 
     document.getElementById("ctSave").onclick = function () {
       var name = nameInput.value.trim();
-      if (!name) { note.textContent = "Give it a name first."; note.className = "set-note err"; nameInput.focus(); return; }
+      if (!name) { note.textContent = "Give the theme a name first."; note.className = "set-note err"; nameInput.focus(); return; }
       if (!Array.isArray(state.customThemes)) state.customThemes = [];
       if (ctEditingId) {
         var existing = findCustomTheme(ctEditingId);
@@ -4993,7 +5009,7 @@
         note.className = "set-note ok";
       };
       var failed = function () {
-        note.textContent = "Couldn't reach the clipboard here. Use Download backup file instead.";
+        note.textContent = "The clipboard didn't respond. Try Download backup instead.";
         note.className = "set-note err";
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -5024,7 +5040,7 @@
       note.textContent = "Backup file saved as " + a.download + ". If nothing appeared, use Copy backup.";
       note.className = "set-note ok";
     } catch (e) {
-      note.textContent = "This viewer won't save files. Use Copy backup and paste it into Notes or Files.";
+      note.textContent = "This browser won't download files. Copy the backup and paste it somewhere you'll find it again.";
       note.className = "set-note err";
     }
   });
@@ -5183,7 +5199,7 @@
       renderCodexIfSplit();
       renderMergeConflicts();
     } catch (e) {
-      note.textContent = "That doesn't look like a valid merge file.";
+      note.textContent = "That file isn't in a format the codex can read.";
       note.className = "set-note err";
     }
   }
@@ -5786,7 +5802,7 @@
       var note = document.getElementById("mapCopyNote");
       var txt = outlineTextPlain();
       if (!txt.trim()) {
-        note.textContent = "Nothing to copy yet.";
+        note.textContent = "There's nothing to copy yet.";
         note.className = "set-note";
         return;
       }
@@ -5837,7 +5853,7 @@
        file, which on iPad lands in Files via the share sheet. */
     if (fileHandle && fileSaveState === "linked") {
       writeSaveFile().then(function (okw) {
-        note.textContent = okw ? "Saved to your linked file." : "Couldn't write to the linked file.";
+        note.textContent = okw ? "Saved to your linked file." : "The app couldn't write to that file.";
         note.className = okw ? "set-note ok" : "set-note err";
       });
       return;
@@ -5873,7 +5889,7 @@
     var note = document.getElementById("bookNote");
     var txt = bookText("txt");
     var done = function () { note.textContent = "Manuscript copied \u2014 " + wordsOf(txt).toLocaleString() + " words."; note.className = "set-note ok"; };
-    var failed = function () { note.textContent = "Couldn't reach the clipboard here. Use Download instead."; note.className = "set-note err"; };
+    var failed = function () { note.textContent = "The clipboard didn't respond. Try Download instead."; note.className = "set-note err"; };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function () { fallbackCopy(txt, done, failed); });
     else fallbackCopy(txt, done, failed);
   });
@@ -5988,7 +6004,7 @@
     if (!chaps.length) {
       var e = document.createElement("div");
       e.className = "book-missing";
-      e.textContent = "Draft a chapter and its prose appears here.";
+      e.textContent = "Draft a chapter and the prose will appear here.";
       page.appendChild(e);
       return;
     }
@@ -6054,7 +6070,7 @@
       note.textContent = "Saved as " + name + ". If nothing appeared, use Copy manuscript.";
       note.className = "set-note ok";
     } catch (e) {
-      note.textContent = "This viewer won't save files. Use Copy manuscript instead.";
+      note.textContent = "This browser won't download files. Use Copy manuscript instead.";
       note.className = "set-note err";
     }
   }
@@ -7008,6 +7024,10 @@
       clearTimeout(posTimer);
       clearTimeout(posTimer2);
       var el = selector ? document.querySelector(selector) : null;
+      if (el) {
+        var probe = el.getBoundingClientRect();
+        if (probe.width === 0 || probe.height === 0) el = null;   /* present but hidden */
+      }
       if (!el) {
         spotlight.style.display = "none";
         placeCardDefault();
@@ -7170,6 +7190,7 @@
 
     function closeTour(markSeen) {
       ensureSchedule();
+      if (typeof closeSetPage === "function") closeSetPage();
       clearTimeout(posTimer);
       clearTimeout(posTimer2);
       document.body.classList.remove("touring");
