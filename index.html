@@ -349,12 +349,32 @@
   .guide.open { opacity: 1; margin: 18px 0 6px; padding: 20px; border-color: var(--card-border); box-shadow: var(--card-shadow); transform: scaleY(1); }
   .guide h2 { font-family: var(--font-display); font-size: 1.1765rem; letter-spacing: 1px; color: var(--pencil); margin: 0 0 4px; }
   .guide .sub { font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 1px; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 14px; }
-  .g-cat {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-    margin: 22px 0 2px; padding-bottom: 5px; border-bottom: 1px solid var(--line);
-    font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--pencil);
+  .g-searchrow { display: flex; gap: 8px; align-items: center; margin: 14px 0 6px; }
+  .g-search {
+    flex: 1; min-width: 0; background: var(--field-bg); border: 1px solid var(--field-border);
+    border-radius: 999px; padding: 10px 14px; color: var(--ink); outline: none;
+    font-family: var(--font-ui); font-size: 0.8235rem; min-height: 44px;
   }
+  .g-search::placeholder { color: var(--placeholder); }
+  .g-search:focus { border-color: var(--pencil); }
+  .g-count {
+    font-family: var(--font-ui); font-size: 0.7059rem; color: var(--ink-faint);
+    min-height: 1em; margin-bottom: 4px;
+  }
+  .g-cat {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    background: none; border: none; cursor: pointer; text-align: left;
+    margin: 20px 0 2px; padding: 11px 0; border-bottom: 1px solid var(--line);
+    font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--pencil); min-height: 44px;
+  }
+  .g-cat-name { flex: 1; }
+  .g-cat-caret { display: flex; transition: transform var(--dur-std) var(--ease-out); }
+  .g-cat-caret .ico { width: 0.9em; height: 0.9em; }
+  .g-group:first-of-type .g-cat { margin-top: 10px; }
+  .g-group.closed .g-cat-body { display: none; }
+  .g-cat-body > .g-item:first-child { border-top: none; }
+  @media (prefers-reduced-motion: reduce) { .g-cat-caret { transition: none; } }
   .g-cat:first-of-type { margin-top: 14px; }
   .g-cat-n { color: var(--ink-faint); letter-spacing: 0; }
   .g-cat + .g-item { border-top: none; }
@@ -555,7 +575,7 @@
   }
   .codex-search::placeholder { color: var(--placeholder); font-style: italic; }
   .type-filter { display: flex; gap: 6px; flex-wrap: wrap; }
-  .tf-btn { background: none; border: 1px solid rgba(128,128,128,0.35); color: var(--ink-faint); font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 1px; text-transform: uppercase; padding: 4px 8px; border-radius: 10px; cursor: pointer; }
+  .tf-btn { position: relative; background: none; border: 1px solid rgba(128,128,128,0.35); color: var(--ink-faint); font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 1px; text-transform: uppercase; padding: 4px 8px; border-radius: 10px; cursor: pointer; }
   .tf-btn.active { border-color: var(--pencil); color: var(--pencil); background: rgba(201,162,75,0.1); }
 
   .entry { background: none; border: none; border-left: 1px solid var(--hairline); box-shadow: none; border-radius: 0; padding: 14px 4px 16px 40px; margin-bottom: 20px; position: relative; transition: border-color var(--dur-std) ease, box-shadow var(--dur-std) ease; animation: cardIn var(--dur-move) var(--ease-spring) backwards; }
@@ -815,9 +835,16 @@
   /* A caret when there are notes underneath, a quiet bullet when there aren't,
      so indent level stays readable all the way down a branch. */
   .note-caret {
+    position: relative;
     flex-shrink: 0; background: none; border: none; padding: 0; cursor: pointer;
     width: 22px; min-height: 0; margin-top: 6px;
     font-size: 0.6471rem; line-height: 1; color: var(--pencil); text-align: left;
+  }
+  /* 22x12 drawn, 44x44 to the finger. Apple's floor without moving the layout. */
+  .note-caret::after, .note-add::after, .mast-icon::after, .tf-btn::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 100%; height: 44px; min-width: 44px;
+    transform: translate(-50%, -50%);
   }
   .note-caret.leaf { color: var(--ink-faint); cursor: default; font-size: 0.7059rem; }
   .note-caret::after { content: ""; position: absolute; }
@@ -828,6 +855,7 @@
   .note-add {
     flex-shrink: 0; background: none; border: 1px solid transparent; color: var(--ink-faint);
     width: 28px; height: 28px; min-height: 0; margin-top: 3px; border-radius: 999px;
+    position: relative;
     font-size: 0.8235rem; line-height: 1; cursor: pointer; opacity: 0; padding: 0;
     transition: opacity var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease;
   }
@@ -1189,6 +1217,7 @@
     position: relative; background: none; border: 1px solid var(--line);
     color: var(--ink-faint); border-radius: 999px; cursor: pointer;
     width: 34px; height: 34px; min-height: 0; padding: 0;
+    /* hit area extended below via ::after; the circle stays 34px by design */
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
     transition: color var(--dur-move) var(--ease-out), border-color var(--dur-move) var(--ease-out);
   }
@@ -1297,8 +1326,9 @@
   }
   .cs-sec p { margin: 0; }
   .g-close {
-    position: absolute; top: 10px; right: 12px; background: none; border: none;
-    color: var(--ink-faint); cursor: pointer; padding: 6px; min-height: 36px; min-width: 36px;
+    position: absolute; top: 6px; right: 8px; background: none; border: none;
+    color: var(--ink-faint); cursor: pointer; padding: 10px; min-height: 44px; min-width: 44px;
+    display: flex; align-items: center; justify-content: center;
   }
   .g-close:hover, .g-close:focus-visible { color: var(--ink); }
   .guide { position: relative; }
@@ -1645,7 +1675,7 @@
     <div class="masthead-inner">
       <div class="mast-title-block">
         <div class="eyebrow">WriteNow · Working Draft</div>
-        <input class="title-input" id="title" placeholder="PROJECT TITLE" />
+        <input class="title-input" id="title" placeholder="Untitled book" aria-label="Book title" />
       </div>
       <div class="meta-row">
         <div class="tab-capsule" id="tabCapsule">
@@ -1871,6 +1901,10 @@
         <label class="book-opt"><input type="checkbox" id="bookNumbers" checked /> Chapter numbers</label>
       </div>
       <div class="set-note" id="bookNote"></div>
+      <div id="bookEmpty" class="empty" style="display:none">
+        <div class="big">Nothing to compile yet</div>
+        <div class="small">Draft a chapter and it appears here, numbered and in order, with the scene breaks in place. This is the whole manuscript in one piece — copy it out or download it when you are ready to send it somewhere.</div>
+      </div>
       <div class="book-stats" id="bookStats"></div>
       <div class="book-page" id="bookPage"></div>
     </div>
@@ -1882,7 +1916,7 @@
       </div>
       <div id="codexEmpty" class="empty" style="display:none">
         <div class="big">The codex is empty</div>
-        <div class="small">Catalog your world here — named entries light up gold across your chapters, track their mentions, and can link to each other.</div>
+        <div class="small">Characters, places, things. Once an entry exists, its name is marked wherever you write it, so you can see where it appears and jump between entries.</div>
       </div>
       <div id="entries"></div>
       <button class="add-btn" id="addEntryBtn" style="margin-top: 4px">+ Add Codex Entry</button>
@@ -3810,17 +3844,29 @@
                      "Scene & chapter", "Prose & voice", "World & theme",
                      "Process & revision"];
     var html = '<h2>The Craft Guide</h2><div class="sub">' + GUIDE.length +
-               ' lessons \u00B7 structure, character, point of view, prose, world, process</div>';
+               ' lessons \u00B7 structure, character, point of view, prose, world, process</div>' +
+               '<div class="g-searchrow">' +
+                 '<input type="search" id="guideSearch" class="g-search" placeholder="Search the guide" ' +
+                        'aria-label="Search the Craft Guide" autocomplete="off" />' +
+                 '<button type="button" class="tf-btn" id="guideFoldAll">Collapse all</button>' +
+               '</div><div class="g-count" id="guideCount"></div>';
     var order = [];
     CAT_ORDER.forEach(function (cat) {
       var group = [];
       GUIDE.forEach(function (item, i) { if ((item[3] || "Scene & chapter") === cat) group.push(i); });
       if (!group.length) return;
-      html += '<div class="g-cat">' + cat + '<span class="g-cat-n">' + group.length + '</span></div>';
+      /* Each category is its own collapsible group. Forty-nine lessons in one
+         open list is a wall to scroll past when you are hunting for one. */
+      html += '<div class="g-group" data-cat="' + cat + '">' +
+                '<button type="button" class="g-cat"><span class="g-cat-caret"></span>' +
+                  '<span class="g-cat-name">' + cat + '</span>' +
+                  '<span class="g-cat-n">' + group.length + '</span></button>' +
+                '<div class="g-cat-body">';
       group.forEach(function (i) {
         order.push(i);
         html += '<div class="g-item"><button type="button" class="g-head"><div class="g-head-text"><div class="g-k"></div><div class="g-d"></div></div><div class="g-chevron">\u2304</div></button><div class="g-lesson"><div class="g-lesson-inner"></div></div></div>';
       });
+      html += '</div></div>';
     });
     g.innerHTML = html;
     g.appendChild(x);          /* after innerHTML, which would wipe it */
@@ -3839,7 +3885,74 @@
       el.querySelector(".g-head").addEventListener("click", function () {
         toggleLesson(el);
       });
+      /* Cached once so searching does not re-strip markup on every keystroke. */
+      el.setAttribute("data-find",
+        (item[0] + " " + item[1] + " " + String(item[2] || "").replace(/<[^>]+>/g, " "))
+          .toLowerCase());
     });
+
+    /* ---- category collapse ---- */
+    var groups = g.querySelectorAll(".g-group");
+    groups.forEach(function (grp) {
+      var head = grp.querySelector(".g-cat");
+      var caret = grp.querySelector(".g-cat-caret");
+      caret.appendChild(icon("fold"));
+      function apply(open) {
+        grp.classList.toggle("closed", !open);
+        caret.style.transform = open ? "rotate(90deg)" : "none";
+        head.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+      apply(true);
+      head.addEventListener("click", function () {
+        apply(grp.classList.contains("closed"));
+      });
+      grp._apply = apply;
+    });
+
+    var foldAll = document.getElementById("guideFoldAll");
+    foldAll.addEventListener("click", function () {
+      var anyOpen = false;
+      groups.forEach(function (grp) { if (!grp.classList.contains("closed")) anyOpen = true; });
+      groups.forEach(function (grp) { grp._apply(!anyOpen); });
+      foldAll.textContent = anyOpen ? "Expand all" : "Collapse all";
+    });
+
+    /* ---- search ---- */
+    var searchEl = document.getElementById("guideSearch");
+    var countEl = document.getElementById("guideCount");
+    function runSearch() {
+      var q = (searchEl.value || "").trim().toLowerCase();
+      if (!q) {
+        items.forEach(function (el) { el.style.display = ""; });
+        groups.forEach(function (grp) { grp.style.display = ""; });
+        countEl.textContent = "";
+        foldAll.style.display = "";
+        return;
+      }
+      /* Every word has to appear somewhere in the lesson, so two terms narrow
+         rather than widen. */
+      var words = q.split(/\s+/);
+      var hits = 0;
+      items.forEach(function (el) {
+        var hay = el.getAttribute("data-find") || "";
+        var match = words.every(function (w) { return hay.indexOf(w) !== -1; });
+        el.style.display = match ? "" : "none";
+        if (match) hits++;
+      });
+      groups.forEach(function (grp) {
+        var any = false;
+        grp.querySelectorAll(".g-item").forEach(function (el) {
+          if (el.style.display !== "none") any = true;
+        });
+        grp.style.display = any ? "" : "none";
+        if (any) grp._apply(true);     /* a hit inside a closed group must be visible */
+      });
+      countEl.textContent = hits ? hits + (hits === 1 ? " lesson" : " lessons") + " match"
+                                 : "Nothing matches that.";
+      foldAll.style.display = "none";
+    }
+    searchEl.addEventListener("input", runSearch);
+    searchEl.addEventListener("search", runSearch);
   })();
 
   (function () {
@@ -5845,8 +5958,18 @@
     var g = document.getElementById("guide");
     if (g.classList.contains("open") === !!open) return;
     setExpanded(g, open);
+    /* Collapsed, the panel is only clipped by max-height, so its ~58 buttons
+       stayed in the tab order and in the accessibility tree — a keyboard user
+       tabbed into a panel they could not see. inert removes both; aria-hidden
+       covers assistive tech that predates it. */
+    inertGuide(g, !open);
     var gt = document.getElementById("guideToggle");
     if (gt) gt.textContent = open ? "Hide Craft Guide" : "Craft Guide";
+  }
+  function inertGuide(g, off) {
+    if (!g) return;
+    if (off) { g.setAttribute("inert", ""); g.setAttribute("aria-hidden", "true"); }
+    else { g.removeAttribute("inert"); g.removeAttribute("aria-hidden"); }
   }
 
   /* Promise Ledger — parked while the Story Map stage is the focus.
@@ -6585,6 +6708,19 @@
       words += w;
       if (w) drafted++;
     });
+
+    /* With nothing drafted, a row of zeroes is not an explanation. Say what
+       this tab is for instead, and hide the stats until they mean something. */
+    var emptyEl = document.getElementById("bookEmpty");
+    var nothing = !drafted;
+    if (emptyEl) emptyEl.style.display = nothing ? "" : "none";
+    stats.style.display = nothing ? "none" : "";
+    var bar = document.querySelector(".book-bar");
+    if (bar) bar.style.display = nothing ? "none" : "";
+    /* The page already carried its own placeholder saying the same thing.
+       Two empty states stacked is worse than none. */
+    page.style.display = nothing ? "none" : "";
+    if (nothing) return;
     stats.textContent = chaps.length + (chaps.length === 1 ? " chapter" : " chapters") +
       " \u00b7 " + drafted + " with prose \u00b7 " + words.toLocaleString() + " words" +
       " \u00b7 \u2248 " + Math.max(1, Math.round(words / 275)) + " pages";
@@ -7522,6 +7658,7 @@
   applyTabDock();
   positionTabIndicator();
   renderCourseBadge();
+  inertGuide(document.getElementById("guide"), !document.getElementById("guide").classList.contains("open"));
   /* Recap first — if a period just closed, that's the more important thing to
      see; the reminder can wait behind it. */
   /* One thing at a time on open. The weekly recap outranks the daily card

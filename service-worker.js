@@ -1,7 +1,7 @@
 /* WriteNow offline cache. The app shell is network-first so a redeploy
    reaches people without a version bump; icons and manifest are cache-first.
    Offline still works: the fetch fails and the cached copy is served. */
-var CACHE_NAME = "writenow-v1";
+var CACHE_NAME = "writenow-v2";
 var FILES = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", function (e) {
   self.skipWaiting();
