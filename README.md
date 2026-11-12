@@ -1,6 +1,6 @@
 # WriteNow
 
-A writing studio for planning and drafting a book. Notes, chapter outlines, a codex of characters and places, and a manuscript compiler.
+A writing studio for planning and drafting a book, fiction or nonfiction. Notes, chapter outlines, a codex of people and places, a manuscript compiler, and a library of writing lessons you can search by what you are stuck on.
 
 It runs entirely on your device. No account, no server, no network requests of any kind. Your writing never leaves the device it was written on.
 
