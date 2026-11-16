@@ -872,9 +872,23 @@
   .note-bullet.has-kids i { box-shadow: 0 0 0 4px var(--line); }
   .note-bullet:hover i { background: var(--pencil); }
   .note-bullet::after {
-    content: ""; position: absolute; left: 50%; top: 50%;
-    width: 100%; height: 44px; min-width: 40px; transform: translate(-50%, -50%);
+    content: ""; position: absolute; left: 0; top: 50%;
+    width: calc(100% + 4px); height: 44px; transform: translateY(-50%);
   }
+  /* The arrow and the bullet sit side by side, and each was given a touch
+     area centred on itself, forty-odd pixels wide. They overlapped, the
+     bullet was on top, and a tap aimed at the arrow opened the branch on its
+     own when it was meant to fold it. Now the two areas share an edge: the
+     arrow owns everything to its left, the bullet everything up to the text.
+     Both are a few pixels wider to make that edge easier to stay on one side of. */
+  .note-head .note-caret { width: 18px; margin-right: -4px; }
+  .note-head .note-caret::after {
+    left: -14px; top: 50%; width: calc(100% + 14px); min-width: 0; height: 44px;
+    transform: translateY(-50%);
+  }
+  .note-head .note-bullet { width: 22px; }
+  /* A note with nothing under it has no arrow, so its bullet takes that room too. */
+  .note-head .note-caret.leaf + .note-bullet::after { left: -32px; width: calc(100% + 36px); }
 
   /* ---------- Zoomed into a branch ---------- */
   .note-crumbs {
@@ -975,7 +989,7 @@
   .note-tool:hover { border-color: var(--pencil); color: var(--pencil); }
   .note-tool.danger:hover, .note-tool.armed { border-color: var(--red); color: var(--red); }
   @media (max-width: 640px) {
-    .note-tool { min-height: 38px; padding: 5px 9px; }
+    .note-tool { min-height: 44px; min-width: 44px; padding: 5px 9px; }
     /* Indentation is the structure, so it is never flattened — only tightened. */
     .note-row { --step: 16px; }
   }
@@ -1572,6 +1586,9 @@
      and the docked tab bar both sit above z-index 15. */
   body.touring .masthead, body.touring #tabDock,
   body.touring .qa-bar { pointer-events: none; }
+  /* Room to scroll a target up under the header even when it is the last
+     thing on a short page, so the card can sit below it instead of on it. */
+  body.touring #mainWrap { padding-bottom: 70vh; }
   /* Those layers sit above the overlay, so without this they stay bright and
      read as live controls while everything else is dimmed. Match the overlay
      rather than leaving a lit strip at the top of a modal screen. */
@@ -1855,6 +1872,16 @@
   .node.landed { animation: landed .5s var(--ease-spring); }
   @media (prefers-reduced-motion: reduce) { .node.landed { animation: none; } }
 
+  /* The small icon buttons (fold, more, move, delete) were drawn at 26 to 30
+     pixels and that was also all a finger could hit. The drawing stays; the
+     touch area around each one is 44 by 44. */
+  .ctrl { position: relative; }
+  .ctrl::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 44px; height: 44px; transform: translate(-50%, -50%);
+  }
+  .ctrl.armed::after { display: none; }
+
   /* The three dots carry a menu; they need to be findable. */
   .chap-more { color: var(--ink-dim); }
   .chap-more .ico path { stroke-width: 2.6; }
@@ -1952,7 +1979,12 @@
   .fold-head { min-width: 0; max-width: 100%; }
   .fold-head .fold-text { white-space: normal; min-width: 0; flex-shrink: 1; overflow-wrap: break-word; line-height: 1.5; }
   #noteBar { gap: 6px; }
-  .note-tool { text-transform: none; letter-spacing: 0.005em; font-size: 0.7647rem; }
+  .note-tool { text-transform: none; letter-spacing: 0.005em; font-size: 0.7647rem; white-space: nowrap; }
+  /* Five actions on the narrowest phones: the bar gives up padding, not buttons. */
+  @media (max-width: 370px) {
+    #noteBar { gap: 4px; padding-left: 8px; padding-right: 8px; }
+    .note-tool { padding-left: 7px; padding-right: 7px; }
+  }
 
   /* A walkthrough over the writing page has to sit above it. */
   body.tour-top #tourOverlay { z-index: 150; }
@@ -1960,6 +1992,415 @@
   .fork-btn.on { border-color: var(--pencil); box-shadow: 0 0 0 1px var(--pencil); }
   .set-row-chev.is-on { color: var(--pencil); }
   .set-row[aria-pressed="false"] .set-row-chev { visibility: hidden; }
+
+  /* ---------- Demonstrations in the walkthrough card ----------
+     A miniature of the control being described, drawn with the app's own
+     colours and type, and a fingertip that uses it. Everything here is
+     scaled down from the real screen; nothing in it can be pressed. */
+  .tour-card.has-demo { width: min(300px, calc(100vw - 32px)); }
+  .tour-card.intro.has-demo { width: min(460px, calc(100vw - 40px)); }
+  .td-stage {
+    position: relative; height: 136px; margin: 12px 0 2px; overflow: hidden;
+    border-radius: 12px; border: 1px solid var(--line);
+    background: rgb(var(--stock-rgb));
+    font-family: var(--font-ui); font-size: 10.5px; line-height: 1.3; color: var(--ink);
+    text-align: left; pointer-events: none; user-select: none; -webkit-user-select: none;
+  }
+  .tour-card.intro .td-stage { height: 150px; }
+  .td-inner { position: relative; width: 100%; height: 100%; }
+  .td-stage.compact { height: 98px; }
+  .td-stage.compact .td-inner { width: calc(100% / 0.72); height: 136px; transform: scale(.72); transform-origin: 0 0; }
+  .td-stage > * { transition: opacity .3s ease; }
+  .td-stage.fade > * { opacity: 0; }
+  .td-stage.still *, .td-stage.still *::before, .td-stage.still *::after {
+    transition: none !important; animation: none !important;
+  }
+
+  /* the fingertip */
+  .td-finger {
+    position: absolute; left: 0; top: 0; width: 24px; height: 24px; margin: -12px 0 0 -12px;
+    z-index: 30; transition-property: transform, opacity; transition-duration: .52s;
+    transition-timing-function: cubic-bezier(.35,.7,.25,1);
+  }
+  .td-finger i {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgb(var(--ink-rgb) / 0.2); border: 1.5px solid rgb(var(--ink-rgb) / 0.5);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+    transition: transform .12s ease, background .12s ease;
+  }
+  .td-finger.down i { transform: scale(.78); background: rgb(var(--pencil-rgb) / 0.35); border-color: var(--pencil); }
+  .td-finger.ring::after {
+    content: ""; position: absolute; inset: -2px; border-radius: 50%;
+    border: 2px solid var(--pencil); animation: tdRipple .5s ease-out forwards;
+  }
+  .td-stage.still .td-finger.ring::after { display: none; }
+  @keyframes tdRipple { from { transform: scale(.6); opacity: .9; } to { transform: scale(2.2); opacity: 0; } }
+  .td-hit { animation: tdHit .26s var(--ease-spring); }
+  @keyframes tdHit { 40% { transform: scale(.92); } }
+  .td-stage .typing::after {
+    content: ""; display: inline-block; width: 1px; height: 1.05em; margin-left: 1px;
+    vertical-align: -2px; background: var(--pencil); animation: tdBlink .9s steps(2) infinite;
+  }
+  @keyframes tdBlink { 50% { opacity: 0; } }
+
+  /* shared pieces */
+  .td-spacer { flex: 1 1 auto; }
+  .td-bar { display: flex; gap: 6px; align-items: center; padding: 9px 10px 2px; }
+  .td-bar.wrap { flex-wrap: wrap; row-gap: 5px; }
+  .td-btn {
+    display: inline-flex; align-items: center; white-space: nowrap; font-size: 9.5px;
+    border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; color: var(--ink-dim);
+    transition: background .2s, color .2s, border-color .2s;
+  }
+  .td-btn.primary { background: var(--pencil); color: var(--on-pencil); border-color: transparent; font-weight: 600; }
+  .td-btn.flat { border-color: transparent; }
+  .td-btn.on { border-color: var(--pencil); color: var(--pencil); }
+  .td-toast {
+    position: absolute; left: 50%; bottom: 10px; z-index: 20; white-space: nowrap;
+    transform: translate(-50%, 160%); padding: 5px 11px; border-radius: 999px; font-size: 9.5px;
+    background: var(--ink); color: rgb(var(--stock-rgb));
+    transition: transform .4s var(--ease-spring);
+  }
+  .td-toast.up { transform: translate(-50%, 0); }
+  .td-pane {
+    position: absolute; inset: 0; z-index: 10; padding: 8px 10px;
+    background: rgb(var(--stock-rgb)); transition: transform .45s var(--ease-out);
+  }
+  .td-pane.from-right { transform: translateX(102%); box-shadow: -8px 0 16px rgba(0,0,0,0.08); }
+  .td-pane.from-below { transform: translateY(102%); box-shadow: 0 -8px 16px rgba(0,0,0,0.08); }
+  .td-pane.in { transform: none; }
+  .td-panehead { font-family: var(--font-display); font-size: 12px; margin: 4px 0 4px; }
+  .td-kicker, .td-flabel, .td-src, .td-slabel {
+    font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--pencil);
+  }
+  .td-kicker { padding: 10px 10px 4px; }
+  .td-pane .td-kicker { padding: 2px 0 0; }
+  .td-lines { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 6px; }
+  .td-lines i { display: block; height: 3px; border-radius: 2px; background: rgb(var(--ink-rgb) / 0.16); }
+  .td-stage .gone { opacity: 0; max-height: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important;
+          padding-top: 0 !important; padding-bottom: 0 !important; overflow: hidden; border-width: 0 !important; }
+
+  /* notes */
+  .td-list { padding: 8px 10px; }
+  .td-row {
+    display: flex; align-items: center; gap: 4px; height: 21px; max-height: 21px;
+    padding-left: calc(var(--d, 0) * 14px); border-radius: 6px; white-space: nowrap; position: relative;
+    transition: padding-left .4s var(--ease-out), transform .45s var(--ease-out), opacity .16s ease,
+                max-height .35s ease, background .2s ease, box-shadow .2s ease;
+  }
+  .td-row.drag { transition: transform .46s cubic-bezier(.35,.7,.25,1), padding-left .4s var(--ease-out); }
+  .td-list.snap .td-row { transition: none; }
+  .td-row.on { background: rgb(var(--pencil-rgb) / 0.12); }
+  .td-row.lift { background: var(--card-bg); box-shadow: 0 6px 14px rgba(0,0,0,0.2); z-index: 3; }
+  .td-caret { width: 8px; flex: 0 0 8px; text-align: center; font-size: 11px; color: var(--pencil);
+              transform: rotate(90deg); transition: transform .3s var(--ease-out); }
+  .td-caret.shut { transform: none; }
+  .td-caret.leaf { visibility: hidden; }
+  .td-dot { flex: 0 0 5px; width: 5px; height: 5px; margin: 0 3px; border-radius: 50%; background: rgb(var(--ink-rgb) / 0.45);
+            transition: box-shadow .3s; }
+  .td-dot.ring { box-shadow: 0 0 0 3px var(--line); }
+  .td-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .td-plus { margin-left: auto; padding: 0 5px; font-size: 13px; color: var(--ink-faint); }
+  .td-dock {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 8; display: flex; gap: 4px;
+    padding: 6px 8px; background: var(--card-bg); border-top: 1px solid var(--line);
+    transform: translateY(105%); transition: transform .35s var(--ease-out);
+  }
+  .td-dock.up { transform: none; }
+  .td-dock .td-btn { padding: 3px 6px; }
+  .td-crumbs { padding: 0 10px; max-height: 0; opacity: 0; overflow: hidden; transition: max-height .35s ease, opacity .3s ease, padding .35s ease; }
+  .td-crumbs.in { max-height: 40px; opacity: 1; padding-top: 7px; }
+  .td-crumb { font-size: 9px; color: var(--pencil); }
+  .td-pane .td-crumb { display: inline-block; padding: 2px 0; }
+  .td-here { font-weight: 600; font-size: 11.5px; padding-top: 1px; }
+  .td-hint {
+    position: absolute; left: 10px; right: 10px; bottom: 9px; font-size: 9px; color: var(--pencil);
+    opacity: 0; transform: translateY(4px); transition: opacity .3s, transform .3s;
+  }
+  .td-hint.in { opacity: 1; transform: none; }
+
+  /* chapters */
+  .td-chap {
+    margin: 8px 10px; padding: 6px 9px 7px; border-radius: 10px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    transition: opacity .3s ease, max-height .35s ease;
+  }
+  .td-chaps { padding-top: 2px; }
+  .td-chap.mini { margin: 4px 10px; padding: 2px 9px; max-height: 26px; }
+  .td-chap.mini .td-title { font-size: 11px; }
+  .td-chead { display: flex; align-items: center; gap: 6px; }
+  .td-num { font-family: var(--font-display); font-size: 13px; color: var(--pencil); min-width: 9px; display: inline-block; }
+  .td-title { flex: 1 1 auto; min-width: 0; font-family: var(--font-display); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .td-title:empty::before, .td-fval:empty::before, .td-search:empty::before, .td-ename:empty::before {
+    content: attr(data-ph); color: var(--ink-faint); font-style: italic;
+  }
+  .td-icon { color: var(--ink-faint); font-size: 10px; padding: 0 3px; letter-spacing: -1px; }
+  .td-fold { font-size: 12px; transform: rotate(90deg); transition: transform .3s var(--ease-out); }
+  .td-chap.shut .td-fold { transform: none; }
+  .td-cbody { max-height: 60px; overflow: hidden; transition: max-height .35s ease, opacity .3s ease; }
+  .td-chap.shut .td-cbody { max-height: 0; opacity: 0; }
+  .td-fline { display: flex; align-items: baseline; gap: 6px; height: 17px; overflow: hidden; }
+  .td-fline .td-flabel { flex: 0 0 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .td-fval { font-size: 10px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .td-field { margin-top: 5px; max-height: 40px; transition: max-height .35s ease; overflow: hidden; }
+  .td-flabel.big { display: flex; align-items: center; gap: 4px; font-size: 8.5px; }
+  .td-fcaret { display: inline-block; width: 7px; font-size: 10px; letter-spacing: 0; transform: rotate(90deg); transition: transform .3s var(--ease-out); }
+  .td-fcaret.open { transform: rotate(90deg); }
+  .td-groups .td-fcaret { transform: none; }
+  .td-groups .td-fcaret.open { transform: rotate(90deg); }
+  .td-field.shut .td-fcaret { transform: none; }
+  .td-field.shut .td-fval { max-height: 0; opacity: 0; padding: 0; }
+  .td-fval.box { display: block; margin: 3px 0 0 11px; padding: 3px 6px; border-radius: 6px; max-height: 22px;
+                 background: var(--field-bg); transition: max-height .3s, opacity .3s, box-shadow .2s; }
+  .td-fval.focus { box-shadow: 0 0 0 1.5px var(--pencil); }
+  .td-q {
+    margin-left: auto; width: 14px; height: 14px; border: 1px solid var(--line); border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 8.5px; font-weight: 600; letter-spacing: 0; color: var(--ink-faint);
+  }
+  .td-insert {
+    margin: 0 10px; height: 13px; max-height: 13px; display: flex; align-items: center; justify-content: center;
+    font-size: 8.5px; color: transparent; border-top: 1px dashed transparent;
+    transition: color .25s, border-color .25s, max-height .3s, opacity .3s;
+  }
+  .td-insert:not(.gone) { border-top-color: var(--line); }
+  .td-insert.show { color: var(--pencil); border-top-color: var(--pencil); }
+  .td-addbtn {
+    margin: 4px 10px; padding: 3px 0; text-align: center; font-size: 9.5px; color: var(--pencil);
+    border: 1px dashed var(--line); border-radius: 8px;
+  }
+  .td-menu {
+    position: absolute; right: 14px; top: 34px; z-index: 12; padding: 3px; min-width: 128px;
+    background: var(--card-bg); border: 1px solid var(--line); border-radius: 9px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+    transform-origin: top right; transform: scale(.85); opacity: 0;
+    transition: transform .3s var(--ease-spring), opacity .2s ease;
+  }
+  .td-menu.up { transform: none; opacity: 1; }
+  .td-menu div { font-size: 9.5px; padding: 3px 8px; border-radius: 5px; }
+  .td-menu .off { color: var(--ink-faint); }
+  .td-menu .danger { color: var(--red); }
+  .td-progwrap { padding: 9px 10px 0; }
+  .td-proglabel { font-size: 9px; color: var(--ink-dim); margin-bottom: 4px; }
+  .td-proglabel.pad { padding: 8px 12px 0; margin-bottom: 0; }
+  .td-prog { height: 4px; border-radius: 999px; background: var(--field-bg); overflow: hidden; }
+  .td-prog i { display: block; height: 100%; width: 0; background: var(--pencil); transition: width .55s var(--ease-out); }
+  .td-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+  .td-status { font-size: 9px; border-radius: 999px; padding: 2px 8px; border: 1.5px solid; transition: border-color .3s; }
+  .td-pov { font-size: 9px; color: var(--ink-dim); border-bottom: 1px solid var(--line); padding: 0 2px 1px; }
+  .td-wc { font-size: 9px; color: var(--ink-faint); margin-left: auto; }
+
+  /* the writing page */
+  .td-page { padding: 7px 10px; height: 100%; box-sizing: border-box; }
+  .td-phead { display: flex; gap: 4px; align-items: center; transition: opacity .6s ease; }
+  .td-phead.dim { opacity: .22; }
+  .td-phead .td-btn { padding: 2px 6px; font-size: 9px; }
+  .td-ptitle { font-family: var(--font-display); font-size: 10.5px; color: var(--ink-dim); margin-left: 4px; }
+  .td-ptext { font-family: var(--font-page); font-size: 10.5px; line-height: 1.55; margin-top: 7px; transition: font-size .25s ease; }
+  .td-pfoot { position: absolute; right: 10px; bottom: 7px; font-size: 9px; color: var(--ink-faint); }
+  .td-side {
+    position: absolute; left: 0; top: 30px; bottom: 0; width: 52%; z-index: 6; padding: 6px 9px;
+    background: var(--card-bg); border-right: 1px solid var(--line); box-shadow: 6px 0 14px rgba(0,0,0,0.1);
+    transform: translateX(-104%); transition: transform .42s var(--ease-out);
+  }
+  .td-side.in { transform: none; }
+  .td-stabs { display: flex; gap: 10px; font-size: 9px; color: var(--ink-faint); border-bottom: 1px solid var(--line); padding-bottom: 4px; margin-bottom: 5px; }
+  .td-stabs .on { color: var(--pencil); }
+  .td-sval { font-size: 9.5px; margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .td-sref { font-size: 9.5px; padding: 3px 0; border-bottom: 1px solid var(--line-soft); }
+  .td-typepanel { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 5px 8px; max-height: 24px;
+                  border-radius: 8px; background: var(--field-bg); transition: max-height .3s, opacity .3s; }
+  .td-slider { position: relative; flex: 1 1 auto; height: 3px; border-radius: 999px; background: rgb(var(--ink-rgb) / 0.15); }
+  .td-slider i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--pencil); }
+  .td-slider b { position: absolute; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%;
+                 background: var(--card-bg); border: 1.5px solid var(--pencil); }
+  .td-slider.drag i, .td-slider.drag b { transition: width .8s cubic-bezier(.35,.7,.25,1), left .8s cubic-bezier(.35,.7,.25,1); }
+  .td-slider.drag + * , .td-typepanel ~ .td-ptext { transition: font-size .8s cubic-bezier(.35,.7,.25,1); }
+
+  /* codex */
+  .td-entries { padding: 4px 0; }
+  .td-entry {
+    position: relative; margin: 0 10px; padding: 5px 4px 6px 22px; max-height: 120px;
+    border-bottom: 1px solid var(--line-soft); border-radius: 6px;
+    transition: opacity .35s ease, max-height .4s ease, background .2s ease, transform .35s var(--ease-out);
+  }
+  .td-entry.on { background: rgb(var(--pencil-rgb) / 0.08); }
+  .td-entry.gone { transform: translateY(6px); }
+  .td-init { position: absolute; left: 5px; top: 4px; font-family: var(--font-display); font-size: 13px; color: var(--pencil); }
+  .td-etop { display: flex; align-items: baseline; gap: 6px; }
+  .td-ename { font-family: var(--font-display); font-size: 11.5px; min-height: 14px; }
+  .td-etype { font-size: 7.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .td-edesc { font-size: 9.5px; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 12px; }
+  .td-erows { max-height: 0; overflow: hidden; opacity: 0; transition: max-height .4s ease, opacity .3s ease; }
+  .td-entry.open .td-erows { max-height: 60px; opacity: 1; }
+  .td-erow { display: flex; gap: 6px; align-items: center; font-size: 9px; margin-top: 3px; }
+  .td-elabel { color: var(--ink-faint); width: 66px; }
+  .td-echip { border: 1px solid var(--line); border-radius: 999px; padding: 1px 6px; color: var(--ink-dim); }
+  .td-x { position: absolute; right: 4px; top: 4px; font-size: 9px; color: var(--ink-faint); opacity: 0; transition: opacity .3s; padding: 1px 4px; }
+  .td-entry.open .td-x { opacity: 1; }
+  .td-x.armed { color: var(--red); background: rgb(178 58 58 / 0.12); border-radius: 999px; font-weight: 600; padding: 1px 7px; }
+  .td-mark { border-bottom: 1.5px dotted transparent; transition: border-color .4s ease, background .2s; }
+  .td-mark.on { border-bottom-color: var(--pencil); }
+  .td-mark.hot { background: rgb(var(--pencil-rgb) / 0.15); border-radius: 3px; }
+  .td-pop {
+    position: absolute; left: 22px; right: 22px; bottom: 12px; z-index: 12; padding: 7px 10px 8px 10px;
+    background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+    opacity: 0; transform: translateY(8px) scale(.96); transition: opacity .25s ease, transform .35s var(--ease-spring);
+  }
+  .td-pop.up { opacity: 1; transform: none; }
+  .td-search {
+    margin: 9px 10px 5px; padding: 4px 11px; min-height: 13px; border-radius: 999px;
+    border: 1px solid var(--line); font-size: 10px; transition: box-shadow .2s;
+  }
+  .td-search.focus { box-shadow: 0 0 0 1.5px var(--pencil); }
+  .td-chips { display: flex; gap: 4px; padding: 0 10px 4px; overflow: hidden; white-space: nowrap; }
+  .td-chips.loose { flex-wrap: wrap; white-space: normal; row-gap: 5px; }
+  .td-chip { font-size: 9px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; transition: color .2s, border-color .2s; }
+  .td-chip.on { border-color: var(--pencil); color: var(--pencil); }
+
+  /* book */
+  .td-bookpage {
+    margin: 6px 18px; padding: 6px 12px; border-radius: 4px;
+    background: var(--card-bg); box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid var(--card-border);
+  }
+  .td-bookpage.small { margin: 4px 12px; padding: 6px 10px; }
+  .td-bookpage.short { margin-top: 6px; }
+  .td-bh { font-family: var(--font-display); font-size: 10.5px; margin: 2px 0 1px; max-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+           transition: opacity .35s ease, max-height .35s ease; }
+  .td-bh.empty { color: var(--ink-faint); }
+  .td-emptytag { font-family: var(--font-ui); font-size: 8.5px; }
+  .td-bookpage.nonum .td-bnum { display: none; }
+  .td-break { text-align: center; font-size: 9px; color: var(--ink-faint); letter-spacing: 2px; max-height: 14px; transition: opacity .35s, max-height .35s; }
+  .td-bookpage > * { transition: opacity .35s ease, max-height .35s ease; }
+  .td-opts { padding: 7px 12px 0; }
+  .td-optrow { display: flex; align-items: center; justify-content: space-between; font-size: 9.5px; height: 20px; }
+  .td-switch { position: relative; width: 24px; height: 14px; border-radius: 999px; background: rgb(var(--ink-rgb) / 0.2); transition: background .25s; }
+  .td-switch i { position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: transform .25s var(--ease-out); }
+  .td-switch.on { background: var(--pencil); }
+  .td-switch.on i { transform: translateX(10px); }
+  .td-file {
+    position: absolute; left: 50%; bottom: 10px; z-index: 9; display: flex; align-items: center; gap: 5px;
+    padding: 4px 9px 4px 6px; border-radius: 8px; font-size: 9.5px;
+    background: var(--card-bg); border: 1px solid var(--line); box-shadow: 0 6px 14px rgba(0,0,0,0.16);
+    opacity: 0; transform: translate(-50%, -26px); transition: opacity .3s ease, transform .5s var(--ease-spring);
+  }
+  .td-file.in { opacity: 1; transform: translate(-50%, 0); }
+  .td-fileicon { position: relative; width: 10px; height: 13px; border: 1.5px solid var(--pencil); border-radius: 2px; }
+  .td-fileicon::after { content: ""; position: absolute; right: -1.5px; top: -1.5px; width: 4px; height: 4px; background: var(--card-bg); border-left: 1.5px solid var(--pencil); border-bottom: 1.5px solid var(--pencil); }
+
+  /* learn */
+  .td-groups { padding: 2px 10px; }
+  .td-group {
+    display: flex; align-items: center; gap: 6px; height: 22px; max-height: 22px; font-size: 10.5px;
+    border-bottom: 1px solid var(--line-soft); transition: opacity .3s ease, max-height .3s ease;
+  }
+  .td-gn { margin-left: auto; font-size: 9px; color: var(--ink-faint); }
+  .td-gbody { max-height: 120px; overflow: hidden; padding-left: 13px; transition: max-height .4s ease, opacity .3s ease; }
+  .td-lesson { padding: 3px 0 4px; border-bottom: 1px solid var(--line-soft); max-height: 70px;
+               transition: opacity .35s ease, max-height .35s ease, transform .35s var(--ease-out); }
+  .td-lesson.gone { transform: translateY(5px); }
+  .td-results .td-lesson, .td-pane .td-lesson { margin: 0 2px; }
+  .td-results { padding: 0 10px; }
+  .td-ltitle { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .td-lesson .td-src { font-size: 7px; color: var(--ink-faint); }
+  .td-lsum { font-size: 9px; color: var(--ink-dim); line-height: 1.35; max-height: 25px; overflow: hidden; margin-top: 2px;
+             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal;
+             transition: opacity .3s, max-height .35s; }
+  .td-card { margin: 10px; padding: 7px 10px 9px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--card-border); }
+  .td-crow { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .td-ctext { flex: 1 1 auto; min-width: 0; }
+  .td-cval { font-size: 9px; color: var(--ink-faint); white-space: nowrap; }
+  .td-pane .td-btn.primary { margin-top: 2px; }
+
+  /* first open: the tab bar */
+  .td-scene { position: absolute; left: 0; right: 0; top: 0; bottom: 30px; }
+  .td-scene-in { animation: tdScene .35s var(--ease-out); }
+  @keyframes tdScene { from { opacity: 0; transform: translateY(5px); } }
+  .td-cap { padding: 8px 12px 0; font-family: var(--font-display); font-size: 11.5px; color: var(--ink-dim); }
+  .td-scene .td-list { padding-top: 4px; }
+  .td-scene .td-chap { margin-top: 5px; }
+  .td-scene .td-search { margin-top: 7px; }
+  .td-scene .td-lesson { margin: 0 12px; }
+  .td-tabs {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 30px; display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--line); font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint);
+    background: var(--card-bg);
+  }
+  .td-tabs span { padding: 0 2px; transition: color .25s; }
+  .td-tabs span.on { color: var(--pencil); }
+  .td-tabind { position: absolute; top: -1px; height: 2px; background: var(--pencil); transition: left .4s var(--ease-out), width .4s var(--ease-out); }
+
+  /* ---------- The bookshelf ---------- */
+  #shelfSheet { position: fixed; inset: 0; z-index: 205; display: none;
+    background: rgba(0,0,0,0.45); align-items: flex-end; justify-content: center; }
+  #shelfSheet.open { display: flex; }
+  @media (min-width: 641px) { #shelfSheet { align-items: center; } }
+  .shelf-card { max-height: 88vh; overflow-y: auto; }
+  .shelf-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .shelf-top .tf-btn { border-color: transparent; color: var(--pencil); font-weight: 600; padding-right: 0; }
+  .shelf-title { font-family: var(--font-display); font-size: 1.5294rem; font-weight: normal; margin: 0; color: var(--ink); }
+  .shelf-sub { font-family: var(--font-ui); font-size: 0.7059rem; color: var(--ink-faint); margin-top: 2px; }
+  .shelf-group { margin-top: 10px; }
+  .shelf-ghead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; }
+  .shelf-ghead.plain { font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pencil); }
+  .shelf-sname { flex: 0 1 auto; min-width: 0; max-width: 100%; background: none; border: 0; border-bottom: 1px dashed transparent;
+    font-family: var(--font-display); font-size: 1.0588rem; color: var(--ink); padding: 4px 0; min-height: 44px; }
+  .shelf-sname:hover, .shelf-sname:focus { border-bottom-color: var(--line); outline: none; }
+  .shelf-gtag { font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .shelf-row { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--line-soft); }
+  .shelf-book {
+    flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    background: none; border: 0; cursor: pointer; text-align: left; padding: 10px 8px; min-height: 44px;
+    border-radius: 10px; color: var(--ink); transition: background var(--dur-std) ease;
+  }
+  .shelf-book:hover, .shelf-book:focus-visible { background: var(--field-bg); outline: none; }
+  .shelf-book:active { transform: scale(0.99); }
+  .shelf-row.on .shelf-book { background: rgb(var(--pencil-rgb) / 0.08); }
+  .sb-title { font-family: var(--font-display); font-size: 1.1765rem; line-height: 1.25; max-width: 100%; overflow-wrap: anywhere; }
+  .sb-meta { font-family: var(--font-ui); font-size: 0.7059rem; color: var(--ink-dim); }
+  .sb-when { font-family: var(--font-ui); font-size: 0.6471rem; color: var(--ink-faint); }
+  .shelf-row.on .sb-when { color: var(--pencil); font-weight: 600; }
+  .shelf-more { flex: 0 0 auto; }
+  .shelf-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .shelf-actions .tf-btn, .shelf-formbtns .tf-btn, .shelf-newseries .tf-btn, .shelf-form > .tf-btn { min-height: 44px; }
+  .shelf-form { margin: 8px 0 12px; padding: 14px; border-radius: 14px; background: var(--field-bg); }
+  .shelf-form-head { font-family: var(--font-display); font-size: 1.0588rem; color: var(--ink); margin-bottom: 6px; }
+  .shelf-form .set-row-cap { margin: 0 0 10px; }
+  .shelf-kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+  @media (max-width: 480px) { .shelf-kinds { grid-template-columns: 1fr; } }
+  .shelf-kind {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; cursor: pointer;
+    background: var(--card-bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-height: 44px; color: var(--ink);
+  }
+  .shelf-kind.on { border-color: var(--pencil); box-shadow: 0 0 0 1px var(--pencil); }
+  .sk-name { font-family: var(--font-ui); font-size: 0.8235rem; font-weight: 600; }
+  .sk-sub { font-family: var(--font-ui); font-size: 0.6471rem; color: var(--ink-faint); }
+  .shelf-input {
+    width: 100%; box-sizing: border-box; min-height: 44px; padding: 10px 14px; margin-bottom: 10px;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--card-bg); color: var(--ink);
+    font-family: var(--font-ui); font-size: 0.8824rem;
+  }
+  .shelf-input:focus { outline: none; border-color: var(--pencil); }
+  .shelf-formbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .shelf-opt {
+    display: block; width: 100%; text-align: left; cursor: pointer; min-height: 44px; margin-bottom: 6px; padding: 8px 12px;
+    background: var(--card-bg); border: 1px solid var(--line); border-radius: 12px;
+    font-family: var(--font-ui); font-size: 0.8235rem; color: var(--ink);
+  }
+  .shelf-opt:hover { border-color: var(--pencil); color: var(--pencil); }
+  .shelf-newseries { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; }
+  .shelf-newseries .shelf-input { margin-bottom: 0; flex: 1 1 auto; min-width: 0; }
+  .shelf-newseries .tf-btn { flex: 0 0 auto; }
+  #shelfNote:empty { display: none; }
+  #shelfNote { margin-top: 12px; }
+  .shelf-toast {
+    display: none; align-items: center; gap: 10px; max-width: 100%;
+    background: var(--card-bg); border: 1px solid var(--card-border); box-shadow: var(--card-shadow);
+    border-radius: 14px; padding: 10px 14px;
+  }
+  .shelf-toast.show { display: flex; animation: cardIn var(--dur-move) var(--ease-spring); }
+  .shelf-toast .mt-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pencil); flex-shrink: 0; }
+  .shelf-toast .mt-text { font-family: var(--font-ui); font-size: 0.7647rem; line-height: 1.4; color: var(--ink); }
 
   /* An unnamed book should not be the loudest thing on every screen. */
   .title-input:placeholder-shown { font-size: 1.0588rem; }
@@ -1984,6 +2425,11 @@
         </div>
         <button class="guide-toggle" id="courseBadge" style="display:none">Lesson 1</button>
         <span class="save" id="saveState"><span class="dot"></span>Auto-save on</span>
+        <button class="mast-icon" id="shelfBtn" aria-label="Your books" title="Your books">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4.5h3.5v15H4zM9.5 4.5H13v15H9.5z"/><path d="M15.2 5.6l3.3-.9 3.1 14.1-3.3.9z"/>
+          </svg>
+        </button>
         <button class="mast-icon" id="tabSettings" aria-label="Settings">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="20" height="20">
             <path fill="currentColor" d="M12 8a4 4 0 100 8 4 4 0 000-8zm0 6.2A2.2 2.2 0 1112 9.8a2.2 2.2 0 010 4.4z"/>
@@ -2121,7 +2567,7 @@
 
       <div class="set-card" data-cat="learn">
         <h3>What you're writing</h3>
-        <div class="set-row-cap" style="margin:0 0 10px">This sets the prompts on each chapter and which course you take. Nothing you have written changes.</div>
+        <div class="set-row-cap" style="margin:0 0 10px">For the book you have open. It sets the prompts on each chapter and which course you take. Nothing you have written changes.</div>
         <div id="learnKinds"></div>
       </div>
       <div class="set-card" data-cat="learn">
@@ -2293,6 +2739,28 @@
     </div>
   </div>
 
+  <!-- The bookshelf: every book, grouped by series, and the way to start,
+       import, export or delete one. -->
+  <div id="shelfSheet" role="dialog" aria-modal="true" aria-labelledby="shelfTitle">
+    <div class="ms-card shelf-card">
+      <div class="shelf-top">
+        <div>
+          <h2 class="shelf-title" id="shelfTitle">Your books</h2>
+          <div class="shelf-sub" id="shelfSub"></div>
+        </div>
+        <button type="button" class="tf-btn" id="shelfClose">Done</button>
+      </div>
+      <div id="shelfList"></div>
+      <div class="shelf-actions" id="shelfActions">
+        <button type="button" class="tf-btn primary" id="shelfNew">+ New book</button>
+        <button type="button" class="tf-btn" id="shelfImport">Import a book</button>
+        <input type="file" id="shelfImportFile" accept=".json,application/json" hidden />
+      </div>
+      <div id="shelfNewForm" style="display:none"></div>
+      <div class="set-note" id="shelfNote" aria-live="polite"></div>
+    </div>
+  </div>
+
   <div id="courseSheet">
     <div class="ms-card">
       <div class="cs-part" id="csPart"></div>
@@ -2340,6 +2808,7 @@
   </div>
 
   <div id="toastStack">
+  <div id="shelfToast" class="shelf-toast" role="status"><span class="mt-dot"></span><span class="mt-text"></span></div>
   <div id="reminderToast" role="status">
     <span class="rt-dot"></span>
     <span class="rt-text"></span>
@@ -2415,6 +2884,7 @@
       <div class="tour-step" id="tourStepLabel"></div>
       <div class="tour-title" id="tourTitle"></div>
       <div class="tour-body" id="tourBody"></div>
+      <div class="td-stage" id="tourDemo" aria-hidden="true" style="display:none"></div>
       <div class="tour-schedule" id="tourSchedule" style="display:none"></div>
       <div class="tour-fork" id="tourFork" style="display:none">
         <button type="button" class="fork-btn" id="forkCourse">
@@ -2615,6 +3085,9 @@
       c.step = s.step; c.done = s.done.slice(); c.extra = s.extra; c.exported = s.exported;
     }
     c.track = kind;
+    /* The kind belongs to the open book; the course follows it. */
+    var openRec = activeBookRec();
+    if (openRec) openRec.kind = kind;
     courseView = null;
     save();
     applyKind();
@@ -2628,6 +3101,607 @@
     if (view === "chapters") renderChapters();
     if (view === "learn") renderLibrary();
   }
+
+  /* ---------- More than one book ----------
+     Every book keeps its own title, chapters, notes and Codex, and its own
+     kind. The book you have open is "checked out": its content lives in the
+     same places it always did (state.chapters, state.codex, state.map), so
+     everything else in the app works on it unchanged. The others wait in
+     state.books. Switching puts the open one back and takes the next one out.
+
+     A series is a group of books that share one Codex. While a book from a
+     series is open, the series' Codex is the open Codex; it goes back to the
+     series when you switch away.
+
+     What belongs to you rather than to a book stays where it was and is
+     shared by all of them: settings, the schedule and streak, daily word
+     counts, and your place in each course. */
+  function emptyMap() { return { nodes: [], edges: [], frames: [], view: { x: 0, y: 0, z: 1 } }; }
+  function bookId() { return "b" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36); }
+  function newBookRecord(kind, title) {
+    return { id: bookId(), title: title || "", kind: KINDS[kind] ? kind : "fiction", seriesId: null,
+             created: Date.now(), updated: Date.now(), lastChapterId: null,
+             chapters: [], codex: [], customTypes: [], map: emptyMap() };
+  }
+  function activeBookRec() {
+    var list = state.books || [];
+    for (var i = 0; i < list.length; i++) if (list[i].id === state.activeBook) return list[i];
+    return null;
+  }
+  function bookById(id) {
+    var list = state.books || [];
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+  function seriesById(id) {
+    var list = state.series || [];
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+  /* Run once after anything is loaded. A save from before there were books
+     becomes the first book, with nothing moved and nothing lost. */
+  function ensureBooks() {
+    if (!Array.isArray(state.series)) state.series = [];
+    if (!Array.isArray(state.books) || !state.books.length) {
+      var rec = newBookRecord((state.course && state.course.track) || "fiction", state.title);
+      rec.chapters = rec.codex = rec.customTypes = rec.map = null;   /* its content is the open content */
+      state.books = [rec];
+      state.activeBook = rec.id;
+    }
+    if (!activeBookRec()) state.activeBook = state.books[0].id;
+    var a = activeBookRec();
+    /* The course knows which kind is open; the book takes its word for it. */
+    if (state.course && KINDS[state.course.track]) a.kind = state.course.track;
+    if (!KINDS[a.kind]) a.kind = "fiction";
+    a.title = state.title;
+    inactiveWords = {};
+  }
+  /* Put the open book's content back in its record (or its series). */
+  function stashActive() {
+    var rec = activeBookRec();
+    if (!rec) return;
+    rec.title = state.title;
+    rec.chapters = state.chapters;
+    rec.map = state.map;
+    rec.lastChapterId = state.settings.lastChapterId || null;
+    rec.updated = Date.now();
+    var ser = rec.seriesId && seriesById(rec.seriesId);
+    if (ser) { ser.codex = state.codex; ser.customTypes = state.customTypes; rec.codex = null; rec.customTypes = null; }
+    else { rec.codex = state.codex; rec.customTypes = state.customTypes; }
+  }
+  /* Take a book's content out of its record and make it the open content.
+     The record keeps no copy while it is open, so there is never a stale one. */
+  function checkout(rec) {
+    state.activeBook = rec.id;
+    state.title = rec.title || "";
+    state.chapters = rec.chapters || [];
+    state.map = rec.map || emptyMap();
+    state.settings.lastChapterId = rec.lastChapterId || null;
+    var ser = rec.seriesId && seriesById(rec.seriesId);
+    if (ser) {
+      state.codex = ser.codex || []; state.customTypes = ser.customTypes || [];
+      ser.codex = null; ser.customTypes = null;
+    } else {
+      state.codex = rec.codex || []; state.customTypes = rec.customTypes || [];
+    }
+    rec.chapters = null; rec.map = null; rec.codex = null; rec.customTypes = null;
+    inactiveWords = {};
+  }
+  /* For anything that rearranges books: put everything back, work on the
+     records, then open the current book again. */
+  function withBooksStashed(fn) {
+    stashActive();
+    var out = fn();
+    var rec = activeBookRec() || state.books[0];
+    checkout(rec);
+    invalidateCodexIndex();
+    return out;
+  }
+  /* A book's content wherever it currently lives. */
+  function bookView(rec) {
+    var open = rec.id === state.activeBook;
+    var a = activeBookRec();
+    var ser = rec.seriesId && seriesById(rec.seriesId);
+    var sharedOpen = ser && a && a.seriesId === rec.seriesId;
+    return {
+      title: open ? state.title : (rec.title || ""),
+      chapters: open ? state.chapters : (rec.chapters || []),
+      map: open ? state.map : (rec.map || emptyMap()),
+      codex: sharedOpen || open ? state.codex : ser ? (ser.codex || []) : (rec.codex || []),
+      customTypes: sharedOpen || open ? state.customTypes : ser ? (ser.customTypes || []) : (rec.customTypes || [])
+    };
+  }
+  /* Word totals for books that are not open do not change, so they are
+     counted once and remembered until something moves. */
+  var inactiveWords = {};
+  function bookWords(rec) {
+    var open = rec.id === state.activeBook;
+    if (!open && inactiveWords[rec.id] != null) return inactiveWords[rec.id];
+    var n = 0;
+    bookView(rec).chapters.forEach(function (c) { n += wordsOf(c.draft); });
+    if (!open) inactiveWords[rec.id] = n;
+    return n;
+  }
+  /* Totals across every book: what the daily card and the daily word count
+     compare against, so opening a different book never looks like writing
+     (or deleting) thousands of words. */
+  function allBooksTotals() {
+    if (!Array.isArray(state.books) || !state.books.length) {
+      var w = 0;
+      state.chapters.forEach(function (c) { w += wordsOf(c.draft); });
+      return { words: w, chapters: state.chapters.length, notes: state.map.nodes.length, codex: state.codex.length };
+    }
+    var t = { words: 0, chapters: 0, notes: 0, codex: 0 }, seen = {};
+    state.books.forEach(function (rec) {
+      var v = bookView(rec);
+      t.words += bookWords(rec);
+      t.chapters += v.chapters.length;
+      t.notes += (v.map.nodes || []).length;
+      if (rec.seriesId) { if (!seen[rec.seriesId]) { seen[rec.seriesId] = 1; t.codex += v.codex.length; } }
+      else t.codex += v.codex.length;
+    });
+    return t;
+  }
+
+  function openBook(id) {
+    var target = bookById(id);
+    if (!target || id === state.activeBook) return;
+    if (draftChapter) closeDraft();
+    stashActive();
+    checkout(target);
+    noteZoomId = null; activeNoteId = null;
+    learnReturn = null; learnMode = null;
+    invalidateCodexIndex();
+    document.getElementById("title").value = state.title;
+    setKind(target.kind);
+    setView(view === "settings" ? "chapters" : view);
+    updateCounts();
+    renderCodexIfSplit();
+    save();
+    haptic("confirm");
+  }
+  function createBook(kind, title) {
+    var rec = newBookRecord(kind, title);
+    stashActive();
+    state.books.push(rec);
+    var keep = view;
+    checkout(rec);
+    noteZoomId = null; activeNoteId = null;
+    invalidateCodexIndex();
+    document.getElementById("title").value = state.title;
+    setKind(rec.kind);
+    setView(keep === "settings" ? "map" : keep);
+    updateCounts();
+    renderCodexIfSplit();
+    save();
+    return rec;
+  }
+  function deleteBook(id) {
+    if (state.books.length < 2) return false;
+    if (id === state.activeBook) {
+      var others = state.books.filter(function (b) { return b.id !== id; })
+        .sort(function (a, b) { return (b.updated || 0) - (a.updated || 0); });
+      openBook(others[0].id);
+    }
+    var rec = bookById(id);
+    var sid = rec && rec.seriesId;
+    state.books = state.books.filter(function (b) { return b.id !== id; });
+    if (sid && !state.books.some(function (b) { return b.seriesId === sid; })) {
+      state.series = state.series.filter(function (s) { return s.id !== sid; });
+    }
+    delete inactiveWords[id];
+    save();
+    return true;
+  }
+  function deepCopy(x) { return JSON.parse(JSON.stringify(x == null ? null : x)); }
+  function duplicateBook(id) {
+    return withBooksStashed(function () {
+      var src = bookById(id);
+      var copy = newBookRecord(src.kind, (src.title || "Untitled") + " (copy)");
+      copy.chapters = deepCopy(src.chapters || []);
+      copy.map = deepCopy(src.map || emptyMap());
+      copy.seriesId = src.seriesId || null;        /* a copy of a series book stays in the series */
+      copy.codex = src.seriesId ? null : deepCopy(src.codex || []);
+      copy.customTypes = src.seriesId ? null : deepCopy(src.customTypes || []);
+      state.books.splice(state.books.indexOf(src) + 1, 0, copy);
+      save();
+      return copy;
+    });
+  }
+  /* Bring a book's Codex into a series. A name already in the series with
+     the same description is the same entry and is not doubled. A name in
+     both with different descriptions keeps both, the incoming one marked
+     with the book it came from, so nothing is silently thrown away. */
+  function mergeIntoSeries(ser, codex, types, fromTitle) {
+    if (!ser.codex) ser.codex = [];
+    if (!ser.customTypes) ser.customTypes = [];
+    var byName = {}, clashes = [];
+    ser.codex.forEach(function (e) { byName[(e.name || "").trim().toLowerCase()] = e; });
+    (codex || []).forEach(function (e) {
+      var key = (e.name || "").trim().toLowerCase();
+      var have = byName[key];
+      if (have) {
+        if ((have.desc || "").trim() === (e.desc || "").trim() && have.type === e.type) return;
+        var marked = deepCopy(e);
+        marked.id = uid() + "m" + clashes.length;
+        marked.name = (e.name || "").trim() + " (from " + (fromTitle || "Untitled") + ")";
+        ser.codex.push(marked);
+        clashes.push(e.name);
+      } else {
+        ser.codex.push(e);
+        byName[key] = e;
+      }
+    });
+    (types || []).forEach(function (t) { if (ser.customTypes.indexOf(t) === -1) ser.customTypes.push(t); });
+    return clashes;
+  }
+  function seriesMembers(sid) { return state.books.filter(function (b) { return b.seriesId === sid; }); }
+  function leaveSeriesRec(rec) {
+    var ser = seriesById(rec.seriesId);
+    rec.codex = deepCopy(ser ? ser.codex || [] : []);
+    rec.customTypes = deepCopy(ser ? ser.customTypes || [] : []);
+    var sid = rec.seriesId;
+    rec.seriesId = null;
+    if (sid && !seriesMembers(sid).length) state.series = state.series.filter(function (s) { return s.id !== sid; });
+  }
+  function addBookToSeries(id, sid, newName) {
+    return withBooksStashed(function () {
+      var rec = bookById(id);
+      if (rec.seriesId && rec.seriesId === sid) return { clashes: [] };
+      if (rec.seriesId) leaveSeriesRec(rec);
+      var ser = sid ? seriesById(sid) : null;
+      if (!ser) {
+        ser = { id: "s" + bookId().slice(1), name: (newName || "").trim() || ((rec.title || "Untitled") + " series"),
+                codex: [], customTypes: [] };
+        state.series.push(ser);
+      }
+      var clashes = mergeIntoSeries(ser, rec.codex, rec.customTypes, rec.title);
+      rec.codex = null; rec.customTypes = null;
+      rec.seriesId = ser.id;
+      save();
+      return { clashes: clashes, series: ser };
+    });
+  }
+  function leaveSeries(id) {
+    withBooksStashed(function () { leaveSeriesRec(bookById(id)); save(); });
+  }
+
+  /* One book as a file of its own. It is laid out like a backup from before
+     there were books, so it also opens in an older copy of the app. */
+  function bookExportJSON(id) {
+    var rec = bookById(id), v = bookView(rec);
+    return JSON.stringify({
+      app: "chapter-guide", bookExport: 1, exportedAt: new Date().toISOString(),
+      title: v.title, kind: rec.kind, chapters: v.chapters, codex: v.codex,
+      customTypes: v.customTypes, map: v.map, course: { track: rec.kind }
+    });
+  }
+  /* Every book in a file: a single-book export, an old backup, or a full
+     backup with several books. Each comes back as content, ready to add. */
+  function booksFromFile(d) {
+    if (!d || typeof d !== "object") return [];
+    var out = [];
+    function clean(x) {
+      return {
+        title: x.title || "", kind: KINDS[x.kind] ? x.kind : "fiction",
+        chapters: Array.isArray(x.chapters) ? x.chapters : [],
+        codex: Array.isArray(x.codex) ? x.codex : [],
+        customTypes: Array.isArray(x.customTypes) ? x.customTypes : [],
+        map: (x.map && Array.isArray(x.map.nodes)) ? x.map : emptyMap()
+      };
+    }
+    if (Array.isArray(d.books) && d.books.length) {
+      var sers = {}, active = null;
+      (d.series || []).forEach(function (s) { sers[s.id] = s; });
+      d.books.forEach(function (b) { if (b.id === d.activeBook) active = b; });
+      d.books.forEach(function (b) {
+        var open = b.id === d.activeBook;
+        var s = b.seriesId && sers[b.seriesId];
+        var shared = s && active && active.seriesId === b.seriesId;
+        out.push(clean({
+          title: open ? d.title : b.title, kind: b.kind,
+          chapters: open ? d.chapters : b.chapters, map: open ? d.map : b.map,
+          codex: shared || open ? d.codex : s ? s.codex : b.codex,
+          customTypes: shared || open ? d.customTypes : s ? s.customTypes : b.customTypes
+        }));
+      });
+    } else if ("chapters" in d) {
+      out.push(clean({ title: d.title, kind: d.kind || (d.course && d.course.track),
+                       chapters: d.chapters, codex: d.codex, customTypes: d.customTypes, map: d.map }));
+    }
+    return out;
+  }
+  function importBooks(txt) {
+    var d = JSON.parse(txt);
+    var found = booksFromFile(d);
+    if (!found.length) throw new Error("no books");
+    found.forEach(function (b) {
+      var rec = newBookRecord(b.kind, b.title);
+      rec.chapters = b.chapters; rec.codex = b.codex; rec.customTypes = b.customTypes; rec.map = b.map;
+      state.books.push(rec);
+    });
+    save();
+    return found;
+  }
+
+  /* ---------- The bookshelf ---------- */
+  var shelfMode = null;        /* null, {type:"new"} or {type:"series", id} */
+  function agoText(t) {
+    if (!t) return "";
+    var mins = Math.round((Date.now() - t) / 60000);
+    if (mins < 2) return "just now";
+    if (mins < 60) return mins + " minutes ago";
+    var hrs = Math.round(mins / 60);
+    if (hrs < 24) return hrs === 1 ? "an hour ago" : hrs + " hours ago";
+    var days = Math.round(hrs / 24);
+    if (days < 7) return days === 1 ? "yesterday" : days + " days ago";
+    return new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function shelfNote(msg, err) {
+    var n = document.getElementById("shelfNote");
+    n.textContent = msg || "";
+    n.className = "set-note" + (msg ? (err ? " err" : " ok") : "");
+  }
+  function openShelf() {
+    shelfMode = null;
+    shelfNote("");
+    renderShelf();
+    document.getElementById("shelfSheet").classList.add("open");
+    var first = document.querySelector("#shelfList .shelf-book");
+    if (first) first.focus({ preventScroll: true });
+    haptic("tap");
+  }
+  function closeShelf() {
+    closeMenu();
+    document.getElementById("shelfSheet").classList.remove("open");
+    shelfMode = null;
+  }
+  function shelfRow(host, rec) {
+    var open = rec.id === state.activeBook;
+    var v = bookView(rec);
+    var row = document.createElement("div");
+    row.className = "shelf-row" + (open ? " on" : "");
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "shelf-book";
+    var words = bookWords(rec);
+    var meta = KINDS[rec.kind].name + " · " + plural(v.chapters.length, "chapter") + " · " +
+               words.toLocaleString() + (words === 1 ? " word" : " words");
+    var when = open ? "Open now" : (rec.updated ? "Edited " + agoText(rec.updated) : "");
+    b.innerHTML = '<span class="sb-title"></span><span class="sb-meta"></span><span class="sb-when"></span>';
+    b.querySelector(".sb-title").textContent = (v.title || "").trim() || "Untitled book";
+    b.querySelector(".sb-meta").textContent = meta;
+    b.querySelector(".sb-when").textContent = when;
+    b.setAttribute("aria-current", open ? "true" : "false");
+    b.addEventListener("click", function () {
+      if (!open) openBook(rec.id);
+      closeShelf();
+    });
+    row.appendChild(b);
+    var more = document.createElement("button");
+    more.type = "button";
+    more.className = "ctrl shelf-more";
+    setIcon(more, "more");
+    more.setAttribute("aria-label", "More for " + ((v.title || "").trim() || "Untitled book"));
+    more.setAttribute("aria-haspopup", "menu");
+    more.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      var only = state.books.length < 2;
+      var hasWork = v.chapters.length || v.map.nodes.length || v.codex.length;
+      openMenu(more, [
+        open ? null : { label: "Open", run: function () { openBook(rec.id); closeShelf(); } },
+        { label: rec.seriesId ? "Move to another series" : "Add to a series", run: function () { shelfMode = { type: "series", id: rec.id }; renderShelf(); } },
+        rec.seriesId ? { label: "Take it out of the series", run: function () {
+            leaveSeries(rec.id); renderShelf();
+            shelfNote("Out of the series. It keeps its own copy of the series Codex.");
+          } } : null,
+        { label: "Duplicate", run: function () { duplicateBook(rec.id); renderShelf(); shelfNote("Copied. The copy is under the original."); } },
+        { label: "Export this book", run: function () { downloadBook(rec.id); } },
+        { label: only ? "Delete book (it's your only one)" : "Delete book", danger: true, disabled: only,
+          confirm: hasWork ? "Delete it and everything in it?" : null,
+          run: function () { var t = (v.title || "").trim() || "Untitled book"; deleteBook(rec.id); renderShelf(); shelfNote("Deleted “" + t + ".”"); } }
+      ]);
+    });
+    row.appendChild(more);
+    host.appendChild(row);
+    if (shelfMode && shelfMode.type === "series" && shelfMode.id === rec.id) host.appendChild(seriesForm(rec));
+  }
+  function seriesForm(rec) {
+    var f = document.createElement("div");
+    f.className = "shelf-form";
+    var h = document.createElement("div");
+    h.className = "shelf-form-head";
+    h.textContent = "Add “" + ((rec.title || state.title || "").trim() || "Untitled book") + "” to a series";
+    f.appendChild(h);
+    var cap = document.createElement("p");
+    cap.className = "set-row-cap";
+    cap.textContent = "Books in a series share one Codex. This book's entries join it. A name that is in both with different notes is kept twice, the copy marked with this book's title.";
+    f.appendChild(cap);
+    state.series.forEach(function (s) {
+      if (s.id === rec.seriesId) return;
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "shelf-opt";
+      b.textContent = s.name + " · " + plural(seriesMembers(s.id).length, "book");
+      b.addEventListener("click", function () { finishSeries(rec, s.id, null); });
+      f.appendChild(b);
+    });
+    var rowN = document.createElement("div");
+    rowN.className = "shelf-newseries";
+    var inp = document.createElement("input");
+    inp.className = "shelf-input"; inp.id = "seriesName";
+    inp.placeholder = "Name a new series";
+    inp.setAttribute("aria-label", "New series name");
+    inp.value = state.series.length ? "" : ((rec.title || state.title || "").trim() ? (rec.title || state.title).trim() + " series" : "");
+    var go = document.createElement("button");
+    go.type = "button"; go.className = "tf-btn primary"; go.textContent = "Start series";
+    go.addEventListener("click", function () { finishSeries(rec, null, inp.value); });
+    inp.addEventListener("keydown", function (ev) { if (ev.key === "Enter") go.click(); });
+    rowN.appendChild(inp); rowN.appendChild(go);
+    f.appendChild(rowN);
+    var cancel = document.createElement("button");
+    cancel.type = "button"; cancel.className = "tf-btn"; cancel.textContent = "Cancel";
+    cancel.addEventListener("click", function () { shelfMode = null; renderShelf(); });
+    f.appendChild(cancel);
+    return f;
+  }
+  function finishSeries(rec, sid, name) {
+    var r = addBookToSeries(rec.id, sid, name);
+    shelfMode = null;
+    renderShelf();
+    renderCodexIfSplit();
+    if (view === "codex") renderCodex();
+    var msg = "Added to " + r.series.name + ". Its books now share one Codex.";
+    if (r.clashes.length) {
+      msg += " " + plural(r.clashes.length, "name was", "names were") + " in both with different notes and " +
+             (r.clashes.length === 1 ? "is" : "are") + " kept twice, marked “(from " +
+             ((rec.title || "").trim() || "Untitled") + ")”: " + r.clashes.slice(0, 4).join(", ") +
+             (r.clashes.length > 4 ? "…" : "") + ".";
+    }
+    shelfNote(msg);
+  }
+  function newBookForm() {
+    var f = document.createElement("div");
+    f.className = "shelf-form";
+    var h = document.createElement("div");
+    h.className = "shelf-form-head"; h.textContent = "A new book";
+    f.appendChild(h);
+    var pick = shelfMode.kind || bookKind();
+    var kinds = document.createElement("div");
+    kinds.className = "shelf-kinds";
+    ["fiction", "story", "teach"].forEach(function (k) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "shelf-kind" + (k === pick ? " on" : "");
+      b.setAttribute("aria-pressed", k === pick ? "true" : "false");
+      b.innerHTML = '<span class="sk-name"></span><span class="sk-sub"></span>';
+      b.querySelector(".sk-name").textContent = KINDS[k].name;
+      b.querySelector(".sk-sub").textContent = KINDS[k].sub;
+      b.addEventListener("click", function () { shelfMode.kind = k; shelfMode.title = inp.value; renderShelf(); });
+      kinds.appendChild(b);
+    });
+    f.appendChild(kinds);
+    var inp = document.createElement("input");
+    inp.className = "shelf-input"; inp.id = "newBookTitle";
+    inp.placeholder = "Title (you can change it later)";
+    inp.setAttribute("aria-label", "Title of the new book");
+    inp.value = shelfMode.title || "";
+    f.appendChild(inp);
+    var row = document.createElement("div");
+    row.className = "shelf-formbtns";
+    var go = document.createElement("button");
+    go.type = "button"; go.className = "tf-btn primary"; go.id = "newBookGo"; go.textContent = "Start this book";
+    go.addEventListener("click", function () {
+      var rec = createBook(pick, inp.value.trim());
+      closeShelf();
+      showToastOnce("Started “" + ((rec.title || "").trim() || "Untitled book") + ".” Your other books are on the shelf.");
+    });
+    inp.addEventListener("keydown", function (ev) { if (ev.key === "Enter") go.click(); });
+    var cancel = document.createElement("button");
+    cancel.type = "button"; cancel.className = "tf-btn"; cancel.textContent = "Cancel";
+    cancel.addEventListener("click", function () { shelfMode = null; renderShelf(); });
+    row.appendChild(go); row.appendChild(cancel);
+    f.appendChild(row);
+    setTimeout(function () { if (document.activeElement !== inp && shelfMode && shelfMode.type === "new") inp.focus({ preventScroll: true }); }, 60);
+    return f;
+  }
+  function renderShelf() {
+    var host = document.getElementById("shelfList");
+    if (!host) return;
+    host.innerHTML = "";
+    var sub = document.getElementById("shelfSub");
+    sub.textContent = plural(state.books.length, "book") + (state.series.length ? " · " + plural(state.series.length, "series", "series") : "");
+    state.series.forEach(function (s) {
+      var members = seriesMembers(s.id);
+      if (!members.length) return;
+      var g = document.createElement("div");
+      g.className = "shelf-group";
+      var head = document.createElement("div");
+      head.className = "shelf-ghead";
+      var name = document.createElement("input");
+      name.className = "shelf-sname";
+      name.value = s.name;
+      name.setAttribute("aria-label", "Series name");
+      name.addEventListener("change", function () { s.name = name.value.trim() || s.name; name.value = s.name; save(); });
+      var tag = document.createElement("span");
+      tag.className = "shelf-gtag";
+      tag.textContent = "Series · one shared Codex";
+      head.appendChild(name); head.appendChild(tag);
+      g.appendChild(head);
+      members.forEach(function (rec) { shelfRow(g, rec); });
+      host.appendChild(g);
+    });
+    var loose = state.books.filter(function (b) { return !b.seriesId || !seriesById(b.seriesId); });
+    if (loose.length) {
+      var g2 = document.createElement("div");
+      g2.className = "shelf-group";
+      if (state.series.length) {
+        var h2 = document.createElement("div");
+        h2.className = "shelf-ghead plain"; h2.textContent = "Books";
+        g2.appendChild(h2);
+      }
+      loose.forEach(function (rec) { shelfRow(g2, rec); });
+      host.appendChild(g2);
+    }
+    var nf = document.getElementById("shelfNewForm");
+    nf.innerHTML = "";
+    var showNew = shelfMode && shelfMode.type === "new";
+    if (showNew) nf.appendChild(newBookForm());
+    nf.style.display = showNew ? "" : "none";
+    document.getElementById("shelfActions").style.display = showNew ? "none" : "";
+  }
+  function downloadBook(id) {
+    var rec = bookById(id), v = bookView(rec);
+    try {
+      var blob = new Blob([bookExportJSON(id)], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      var slug = ((v.title || "").trim() || "untitled").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "book";
+      a.download = slug + "-book.json";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      shelfNote("Saved as " + a.download + ". Import it from any shelf to bring the book back.");
+    } catch (e) {
+      shelfNote("This browser won't save files. A full backup in Settings has every book in it.", true);
+    }
+  }
+  function showToastOnce(msg) {
+    var t = document.getElementById("shelfToast");
+    if (!t) return;
+    t.querySelector(".mt-text").textContent = msg;
+    t.classList.add("show");
+    clearTimeout(t._h);
+    t._h = setTimeout(function () { t.classList.remove("show"); }, 3800);
+  }
+  (function () {
+    document.getElementById("shelfBtn").addEventListener("click", openShelf);
+    document.getElementById("shelfClose").addEventListener("click", closeShelf);
+    document.getElementById("shelfSheet").addEventListener("click", function (ev) { if (ev.target === this) closeShelf(); });
+    document.getElementById("shelfNew").addEventListener("click", function () {
+      shelfMode = { type: "new", kind: bookKind(), title: "" }; shelfNote(""); renderShelf();
+    });
+    document.getElementById("shelfImport").addEventListener("click", function () { document.getElementById("shelfImportFile").click(); });
+    document.getElementById("shelfImportFile").addEventListener("change", function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var got = importBooks(String(r.result));
+          renderShelf();
+          shelfNote(got.length === 1
+            ? "Added “" + ((got[0].title || "").trim() || "Untitled book") + "” to the shelf. Nothing else changed."
+            : "Added " + got.length + " books to the shelf. Nothing else changed.");
+        } catch (e) {
+          shelfNote("That file has no book in it the app can read. Nothing changed.", true);
+        }
+      };
+      r.readAsText(f);
+      this.value = "";
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && document.getElementById("shelfSheet").classList.contains("open") && !openMenuEl) closeShelf();
+    });
+  })();
+
   function renderStrip() {
     var el = document.getElementById("craftStrip");
     if (!el) return;
@@ -3610,88 +4684,1025 @@
   }
   var SECTION_TOURS = {
     map: function () { return [
-      { section: "Notes", title: "This is where the thinking goes",
+      { section: "Notes", title: "This is where the thinking goes", demo: "notes-intro",
         body: "Anything you are not ready to call a chapter belongs here: ideas, questions, scraps, lists. It is an outline, so any note can hold more notes underneath it, as deep as you need." },
-      { section: "Notes", title: "Start a note", target: ["#notesEmptyGo", "#mapAdd"],
+      { section: "Notes", title: "Start a note", demo: "notes-start", target: ["#notesEmptyGo", "#mapAdd"],
         body: "This adds a note. Type, then press Return for the next one. Nothing here has to be good. It has to be out of your head." },
-      { section: "Notes", title: "Tap a note to write in it", target: [".note-row .note-text"],
+      { section: "Notes", title: "Tap a note to write in it", demo: "notes-tap", target: [".note-row .note-text"],
         body: "Tap any note to change it. The + at the end of a row adds a note underneath that one, which is how one idea becomes three. While a note is open, a bar at the bottom offers a checkbox, Move and delete." },
-      { section: "Notes", title: "The bullet", target: [".note-row .note-bullet"],
+      { section: "Notes", title: "The bullet", demo: "notes-bullet", target: [".note-row .note-bullet"],
         body: "Tap a bullet to open that note on its own, with only what sits under it. Hold the bullet and drag to move the note somewhere else. The small arrow beside it folds the notes underneath out of sight." },
-      { section: "Notes", title: "Swipe to change level",
+      { section: "Notes", title: "Swipe to change level", demo: "notes-swipe",
         body: "Swipe a note to the right to tuck it under the one above. Swipe left to pull it back out. If you would rather use buttons, tap the note and choose Move from the bar at the bottom." },
-      { section: "Notes", title: "Collapse and copy", target: ["#noteCopy"],
+      { section: "Notes", title: "Collapse and copy", demo: "notes-collapse", target: ["#noteCopy"],
         body: "Collapse all folds the outline down to its top level. Copy outline puts the whole thing on your clipboard as plain text, ready to paste anywhere." }
     ]; },
     chapters: function () {
       var F = kindInfo().f;
       var names = [F.goal[2], F.setting[2], F.start[2], F.middle[2], F.end[2]];
       return [
-      { section: "Chapters", title: "This is where a plan becomes a draft",
+      { section: "Chapters", title: "This is where a plan becomes a draft", demo: "chap-intro",
         body: "Each chapter gets a short plan and then a page of its own to write on. The plan is five prompts. Answer each in a line or two and you will know what the chapter has to do before you write a word of it." },
-      { section: "Chapters", title: "Add a chapter", target: ["#addBtn"],
+      { section: "Chapters", title: "Add a chapter", demo: "chap-add", target: ["#addBtn"],
         body: "This adds a chapter at the end. The faint line above a chapter adds one in that spot instead." },
-      { section: "Chapters", title: "Name it", target: [".chap .chap-head"],
+      { section: "Chapters", title: "Name it", demo: "chap-name", target: [".chap .chap-head"],
         body: "Give the chapter a title, or leave it as a number. The arrow folds the whole chapter down to one line. The three dots hold Move up, Move down, Insert and Delete." },
-      { section: "Chapters", title: "Where it stands", target: [".chap .chap-meta"],
+      { section: "Chapters", title: "Where it stands", demo: "chap-status", target: [".chap .chap-meta"],
         body: "Set the status as the chapter goes from outline to done, and the bar at the top of the screen keeps the tally." +
               (kindInfo().pov ? " The box beside it is for whose eyes the chapter is seen through." : "") },
-      { section: "Chapters", title: "The five prompts", target: [".chap .field"],
+      { section: "Chapters", title: "The five prompts", demo: "chap-prompts", target: [".chap .field"],
         body: "From top to bottom: " + names.join(", ") + ". Tap under a prompt to answer it, and tap its name to fold it away. Short answers are the right ones. This is the plan, not the chapter." },
-      { section: "Chapters", title: "When a part will not come", target: [".chap .field-help"],
+      { section: "Chapters", title: "When a part will not come", demo: "chap-help", target: [".chap .field-help"],
         body: "Each prompt has a small ? beside it. Tap it when that part of the chapter is giving you trouble and you get the lessons for exactly that part, with a way straight back to where you were." },
-      { section: "Chapters", title: "Write", target: [".chap .write-btn"],
+      { section: "Chapters", title: "Write", demo: "chap-write", target: [".chap .write-btn"],
         body: "This opens the chapter's own page, where the writing happens. Your plan comes with you in a panel at the side." }
     ]; },
     write: function () { return [
-      { section: "The writing page", title: "This is the page",
+      { section: "The writing page", title: "This is the page", demo: "write-page",
         body: "Write the chapter here. It saves as you type, and the number at the bottom is this chapter's word count. Once you start typing, the controls fade back so there is nothing to look at but the words." },
-      { section: "The writing page", title: "Your plan, beside you", target: ["#dmSidebarToggle"],
+      { section: "The writing page", title: "Your plan, beside you", demo: "write-plan", target: ["#dmSidebarToggle"],
         body: "Outline shows the five prompts you answered and how the last chapter ended. Its Reference tab holds short craft notes for the moment a sentence will not behave." },
-      { section: "The writing page", title: "Make it comfortable", target: ["#dmType"],
+      { section: "The writing page", title: "Make it comfortable", demo: "write-type", target: ["#dmType"],
         body: "Aa changes the size of the text and the space between lines. Set it once and it stays." },
-      { section: "The writing page", title: "Copy and go back", target: ["#dmBack"],
+      { section: "The writing page", title: "Copy and go back", demo: "write-copy", target: ["#dmBack"],
         body: "Copy chapter puts this chapter's text on your clipboard. Back returns you to the chapter list. Nothing is lost either way." }
     ]; },
     codex: function () { return [
-      { section: "Codex", title: "The Codex remembers so you do not have to",
+      { section: "Codex", title: "The Codex remembers so you do not have to", demo: "codex-intro",
         body: kindInfo().codex + " Write a thing down once here and you can stop carrying it in your head." },
-      { section: "Codex", title: "Add an entry", target: ["#addEntryBtn"],
+      { section: "Codex", title: "Add an entry", demo: "codex-add", target: ["#addEntryBtn"],
         body: "Give it a name, choose its type, and write what you need to remember about it. A few lines is plenty to start." },
-      { section: "Codex", title: "Names link themselves",
+      { section: "Codex", title: "Names link themselves", demo: "codex-link",
         body: "Once an entry exists, its name is marked wherever you type it in a chapter. Tap a marked name and the entry appears without you losing your place." },
-      { section: "Codex", title: "Open a card for more", target: [".entry"],
+      { section: "Codex", title: "Open a card for more", demo: "codex-open", target: [".entry .entry-head", ".entry"],
         body: "Touch a card to open it. Also known as lets a nickname point to the same entry. Relations ties two entries together. Appears in lists the chapters that mention it. The cross deletes the entry, and asks first." },
-      { section: "Codex", title: "Find things", target: ["#codexSearch"],
+      { section: "Codex", title: "Find things", demo: "codex-find", target: ["#codexSearch"],
         body: "Search by name or by anything in the description. The row underneath shows one type at a time, and + Category adds a type of your own." }
     ]; },
     learn: function () { return [
-      { section: "Learn", title: "Every lesson lives here",
+      { section: "Learn", title: "Every lesson lives here", demo: "learn-intro",
         body: "Your course, the craft lessons and the short notes from the writing page are all under this tab. Nothing here has to be read in order." },
-      { section: "Learn", title: "Say what is wrong", target: ["#learnSearch"],
+      { section: "Learn", title: "Say what is wrong", demo: "learn-search", target: ["#learnSearch"],
         body: "Type the trouble in your own words: the middle drags, the dialogue sounds fake, I do not know how to end it. The lessons that deal with it come up, closest first. It matches words, so plain ones work best." },
-      { section: "Learn", title: "Or pick from the list", target: ["#learnStuck"],
+      { section: "Learn", title: "Or pick from the list", demo: "learn-stuck", target: ["#learnStuckList .learn-chip", "#learnStuck"],
         body: "If you cannot put it into words, these are the troubles writers run into most. Tap one and the lessons for it open." },
-      { section: "Learn", title: "Your course", target: ["#learnCourses"],
+      { section: "Learn", title: "Your course", demo: "learn-course", target: ["#learnCourseList .set-row", "#learnCourses"],
         body: "Your course picks up where you left it. The other two are open to read whenever you are curious, and reading them changes nothing in yours." },
-      { section: "Learn", title: "Browse by subject", target: ["#guide .g-cat"],
+      { section: "Learn", title: "Browse by subject", demo: "learn-browse", target: ["#guide .g-cat"],
         body: "Every lesson, grouped by what it is about. Tap a group to open it, and a lesson to read it." }
     ]; },
     book: function () { return [
-      { section: "Book", title: "This is the whole manuscript",
+      { section: "Book", title: "This is the whole manuscript", demo: "book-intro",
         body: "Every drafted chapter, in order, as one document. Nothing is written here. It is where you read the book through and where you take it out of the app." },
-      { section: "Book", title: "What goes in", target: ["#bookOnlyDrafted"],
+      { section: "Book", title: "What goes in", demo: "book-opts", target: ["#bookOnlyDrafted"],
         body: "Only drafted chapters leaves out any chapter with no writing in it yet. Chapter numbers turns the numbering on or off." },
-      { section: "Book", title: "Take it with you", target: ["#bookCopy"],
+      { section: "Book", title: "Take it with you", demo: "book-export", target: ["#bookCopy"],
         body: "Copy manuscript puts the whole book on your clipboard. Download .md saves a plain text file. Download .html saves one that opens in any browser and prints cleanly." }
     ]; }
+  };
+
+  /* ---------- Demonstrations in the walkthrough card ----------
+     Each walkthrough step can carry a small looping animation of the control
+     it describes: a miniature of that part of the screen, and a fingertip
+     doing the thing (a tap, a swipe, a hold and drag). It is drawn inside the
+     card from scratch every loop, so it never touches the real screen or the
+     reader's writing, and it works the same on an empty app as a full one.
+     With reduced motion set, each one holds still on its most telling frame. */
+  var TD_SAMPLES = {
+    fiction: {
+      notes: ["A lighthouse keeper", "She has not spoken in days", "The radio only receives", "A boy washes ashore", "Who sent the tin?"],
+      titles: ["The Wreck", "The Boy"],
+      answers: ["She finds the tin", "The lighthouse, in winter", "The lamp fails mid-storm", "She hides the boy", "The radio speaks back"],
+      prose: "The lamp went out at four. Mara climbed the stairs in the dark, counting them the way her father had taught her.",
+      entries: [["Mara", "Character", "Keeps the light alone."], ["The lighthouse", "Place", "Ninety-one stairs. One window faces land."], ["The tin", "Item", "Sealed. Washed up with the boy."]],
+      link: ["At dawn ", " found the tin wedged in the rocks."],
+      search: "the middle drags"
+    },
+    story: {
+      notes: ["The summer Dad left", "His car stayed in the drive", "Ask Mom about the letter", "The kitchen radio", "What did he say?"],
+      titles: ["The Drive", "The Letter"],
+      answers: ["Why he really left", "Our kitchen, 1998", "The phone rings at six", "What happened, then what I see now", "His car, still in the drive"],
+      prose: "The phone rang at six, which it never did. My mother let it ring twice before she picked it up, and I knew.",
+      entries: [["Dad", "Person", "Left in June. Kept the car."], ["Our house", "Place", "Yellow kitchen. The radio by the sink."], ["June 1998", "Date", "The summer it happened."]],
+      link: ["That June ", " left the car in the drive and walked."],
+      search: "it reads like a list"
+    },
+    teach: {
+      notes: ["Money runs out by Friday", "Track one week first", "Why budgets fail", "Dana, broke on payday", "One rule per chapter"],
+      titles: ["Find the leak", "Set the cap"],
+      answers: ["Budget a week in 30 minutes", "Money is gone by Friday", "Dana, broke on payday", "Track, sort, then cap", "Try it with tonight's receipts"],
+      prose: "Dana was paid on Monday and broke by Thursday. She was not careless. She could not see where the money went.",
+      entries: [["Dana", "Reader", "Paid weekly. Out of money by Thursday."], ["The leak", "Term", "Small spending nobody tracks."], ["Weekly cap", "Term", "One number for the week, not a budget."]],
+      link: ["Like ", ", most readers are paid on a Monday."],
+      search: "it reads dry"
+    }
+  };
+  function tdS() { return TD_SAMPLES[bookKind()] || TD_SAMPLES.fiction; }
+
+  var demoRun = { timers: [], gen: 0, id: null };
+  function demoStop() {
+    demoRun.timers.forEach(clearTimeout);
+    demoRun.timers = [];
+    demoRun.gen++;
+    var st = document.getElementById("tourDemo");
+    if (st) { st.innerHTML = ""; st.classList.remove("fade"); }
+  }
+  function demoPlay(id, keepCompact) {
+    var stage = document.getElementById("tourDemo");
+    var card = document.querySelector(".tour-card");
+    demoStop();
+    if (!stage) return;
+    demoRun.id = id || null;
+    if (!keepCompact) stage.classList.remove("compact");
+    var def = id && DEMOS[id];
+    if (!def) {
+      stage.style.display = "none";
+      if (card) card.classList.remove("has-demo");
+      return;
+    }
+    stage.style.display = "";
+    if (card) card.classList.add("has-demo");
+    var gen = demoRun.gen;
+    var still = !!REDUCED_MOTION;
+    stage.classList.toggle("still", still);
+    stage.setAttribute("data-demo", id);
+    function once() {
+      if (demoRun.gen !== gen) return;
+      stage.innerHTML = "";
+      stage.classList.remove("fade");
+      /* Everything is drawn into one inner frame of fixed size. On a cramped
+         screen that frame is scaled down as a whole, finger included, so a
+         demonstration never has to be laid out twice. */
+      var inner = document.createElement("div");
+      inner.className = "td-inner";
+      stage.appendChild(inner);
+      var q = [];
+      var k = demoKit(inner, q);
+      var total = def(k) || 4000;
+      q.sort(function (a, b) { return a[0] - b[0] || a[2] - b[2]; });
+      if (still) {
+        var cut = k._still != null ? k._still : total;
+        q.forEach(function (e) { if (e[0] <= cut) e[1](); });
+        return;
+      }
+      q.forEach(function (e) {
+        demoRun.timers.push(setTimeout(function () { if (demoRun.gen === gen) e[1](); }, e[0]));
+      });
+      demoRun.timers.push(setTimeout(function () { if (demoRun.gen === gen) stage.classList.add("fade"); }, total));
+      demoRun.timers.push(setTimeout(once, total + 360));
+    }
+    once();
+  }
+
+  /* When the card, demonstration and all, will not fit beside what it points
+     at, the demonstration is drawn smaller rather than dropped. */
+  function demoCompact(on) {
+    var st = document.getElementById("tourDemo");
+    if (!st || st.style.display === "none" || st.classList.contains("compact") === !!on) return false;
+    st.classList.toggle("compact", !!on);
+    demoPlay(demoRun.id, true);
+    return true;
+  }
+
+  function demoKit(stage, q) {
+    var seq = 0;
+    var k = {
+      stage: stage, f: null,
+      at: function (ms, fn) { q.push([ms, fn, seq++]); return ms; },
+      still: function (ms) { k._still = ms; },
+      el: function (parent, cls, text, tag) {
+        var e = document.createElement(tag || "div");
+        if (cls) e.className = cls;
+        if (text != null) e.textContent = text;
+        (parent || stage).appendChild(e);
+        return e;
+      },
+      /* Where a point inside an element sits in the stage. Offsets, not
+         bounding boxes: the card arrives with a scale animation, and a
+         bounding box measured mid-animation would aim the finger off target. */
+      pos: function (el, ax, ay) {
+        var x = 0, y = 0, n = el;
+        while (n && n !== stage) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+        return { x: x + el.offsetWidth * (ax == null ? 0.5 : ax), y: y + el.offsetHeight * (ay == null ? 0.5 : ay) };
+      },
+      finger: function () {
+        var f = k.el(stage, "td-finger");
+        k.el(f, "", null, "i");
+        f.style.transform = "translate(" + (stage.clientWidth - 18) + "px," + (stage.clientHeight + 16) + "px)";
+        f.style.opacity = "0";
+        k.f = f;
+        return f;
+      },
+      move: function (ms, target, ax, ay, dur) {
+        dur = dur || 520;
+        k.at(ms, function () {
+          var t = typeof target === "function" ? target() : target;
+          var p = t && t.nodeType ? k.pos(t, ax, ay) : t;
+          if (!p) return;
+          k.f.style.transitionDuration = dur + "ms";
+          k.f.style.opacity = "1";
+          k.f.style.transform = "translate(" + Math.round(p.x) + "px," + Math.round(p.y) + "px)";
+        });
+        return ms + dur;
+      },
+      /* Arrive, press, act, let go. Returns when the finger is free again. */
+      tap: function (ms, target, fn, ax, ay) {
+        var t = k.move(ms, target, ax, ay);
+        k.at(t + 60, function () { k.f.classList.add("down"); });
+        k.at(t + 200, function () {
+          k.f.classList.remove("down", "ring"); void k.f.offsetWidth; k.f.classList.add("ring");
+          var el = typeof target === "function" ? target() : target;
+          if (el && el.nodeType) k.bump(el);
+          if (fn) fn();
+        });
+        return t + 520;
+      },
+      press: function (ms) { return k.at(ms, function () { k.f.classList.add("down"); }); },
+      lift: function (ms) { return k.at(ms, function () { k.f.classList.remove("down"); }); },
+      away: function (ms) {
+        return k.at(ms, function () {
+          k.f.style.transitionDuration = "600ms";
+          k.f.style.opacity = "0";
+          k.f.style.transform = "translate(" + (stage.clientWidth - 18) + "px," + (stage.clientHeight + 16) + "px)";
+        });
+      },
+      bump: function (el) { el.classList.remove("td-hit"); void el.offsetWidth; el.classList.add("td-hit"); },
+      type: function (ms, el, text, step) {
+        step = step || 50;
+        k.at(ms, function () { el.classList.add("typing"); });
+        for (var i = 1; i <= text.length; i++) {
+          (function (i) { k.at(ms + i * step, function () { el.textContent = text.slice(0, i); }); })(i);
+        }
+        k.at(ms + text.length * step + 260, function () { el.classList.remove("typing"); });
+        return ms + text.length * step;
+      },
+      cls: function (ms, el, name, on) { return k.at(ms, function () { el.classList.toggle(name, on !== false); }); },
+      text: function (ms, el, value) { return k.at(ms, function () { el.textContent = value; }); },
+      toast: function (ms, label) {
+        var t = k.el(stage, "td-toast", label);
+        k.cls(ms, t, "up");
+        k.cls(ms + 1500, t, "up", false);
+        return ms + 1500;
+      }
+    };
+    return k;
+  }
+
+  /* ---- shared miniatures ---- */
+  function tdRow(k, parent, text, d, kids) {
+    var r = k.el(parent, "td-row");
+    r.style.setProperty("--d", d || 0);
+    r._caret = k.el(r, "td-caret" + (kids ? "" : " leaf"), "›");
+    r._dot = k.el(r, "td-dot" + (kids ? " ring" : ""), null, "i");
+    r._txt = k.el(r, "td-txt", text);
+    return r;
+  }
+  function tdDepth(r, d) { r.style.setProperty("--d", d); }
+  function tdLines(k, parent, widths) {
+    var box = k.el(parent, "td-lines");
+    widths.forEach(function (w) { k.el(box, "", null, "i").style.width = w + "%"; });
+    return box;
+  }
+  function tdPane(k, from) {
+    return k.el(null, "td-pane from-" + (from || "right"));
+  }
+  function tdChapHead(k, parent, num, title) {
+    var h = k.el(parent, "td-chead");
+    h._num = k.el(h, "td-num", String(num));
+    h._title = k.el(h, "td-title", title);
+    return h;
+  }
+  function tdEntry(k, parent, e) {
+    var c = k.el(parent, "td-entry");
+    k.el(c, "td-init", e[0].charAt(0));
+    var top = k.el(c, "td-etop");
+    c._name = k.el(top, "td-ename", e[0]);
+    c._type = k.el(top, "td-etype", e[1]);
+    c._desc = k.el(c, "td-edesc", e[2]);
+    return c;
+  }
+  function tdLesson(k, parent, title, src) {
+    var r = k.el(parent, "td-lesson");
+    if (src) k.el(r, "td-src", src);
+    k.el(r, "td-ltitle", title);
+    return r;
+  }
+  function tdPageHead(k, parent) {
+    var h = k.el(parent, "td-phead");
+    h._back = k.el(h, "td-btn flat", "← Back");
+    k.el(h, "td-spacer");
+    h._outline = k.el(h, "td-btn", "Outline");
+    h._aa = k.el(h, "td-btn", "Aa");
+    h._copy = k.el(h, "td-btn", "Copy chapter");
+    return h;
+  }
+  function tdWordsOf(s) { s = (s || "").trim(); return s ? s.split(/\s+/).length : 0; }
+
+  var DEMOS = {
+    /* ================= first open ================= */
+    "intro-tabs": function (k) {
+      var S = tdS();
+      var scene = k.el(null, "td-scene");
+      var bar = k.el(null, "td-tabs");
+      var names = ["Notes", "Chapters", "Codex", "Book", "Learn"];
+      var tabs = names.map(function (n) { return k.el(bar, "", n, "span"); });
+      var ind = k.el(bar, "td-tabind");
+      var paint = [
+        function (h) { k.el(h, "td-cap", "Ideas, in a list that branches");
+          var l = k.el(h, "td-list"); tdRow(k, l, S.notes[0], 0, true); tdRow(k, l, S.notes[1], 1); tdRow(k, l, S.notes[3], 0); },
+        function (h) { k.el(h, "td-cap", "A plan, then a draft");
+          var c = k.el(h, "td-chap"); tdChapHead(k, c, 1, S.titles[0]);
+          var F = kindInfo().f;
+          ["goal", "setting"].forEach(function (key, i) { var ln = k.el(c, "td-fline"); k.el(ln, "td-flabel", F[key][2]); k.el(ln, "td-fval", S.answers[i]); }); },
+        function (h) { k.el(h, "td-cap", "Who and what, written down once");
+          tdEntry(k, h, S.entries[0]); tdEntry(k, h, S.entries[1]); },
+        function (h) { k.el(h, "td-cap", "Every chapter, in order, as one book");
+          var p = k.el(h, "td-bookpage small"); k.el(p, "td-bh", "1 · " + S.titles[0]); tdLines(k, p, [96, 88, 60]); },
+        function (h) { k.el(h, "td-cap", "Every lesson, and a search");
+          k.el(h, "td-search", S.search); tdLesson(k, h, (STUCK[bookKind()] || STUCK.fiction)[2][1][0]); }
+      ];
+      function show(i) {
+        tabs.forEach(function (t, j) { t.classList.toggle("on", j === i); });
+        ind.style.left = tabs[i].offsetLeft + "px"; ind.style.width = tabs[i].offsetWidth + "px";
+        scene.innerHTML = ""; var h = k.el(scene, "td-scene-in"); paint[i](h);
+      }
+      k.at(0, function () { show(0); });
+      k.finger();
+      var t = 700;
+      for (var i = 1; i < 5; i++) { (function (i) { t = k.tap(t, tabs[i], function () { show(i); }); })(i); t += 900; }
+      k.away(t);
+      k.still(0);
+      return t + 900;
+    },
+
+    /* ================= Notes ================= */
+    "notes-intro": function (k) {
+      var S = tdS(), list = k.el(null, "td-list");
+      var data = [[S.notes[0], 0, true], [S.notes[1], 1], [S.notes[2], 1], [S.notes[3], 0]];
+      var t = 250;
+      data.forEach(function (d) {
+        var r = tdRow(k, list, "", d[1], d[2]);
+        r.classList.add("gone");
+        k.cls(t, r, "gone", false);
+        t = k.type(t + 220, r._txt, d[0], 34) + 260;
+      });
+      k.still(t);
+      return t + 1700;
+    },
+    "notes-start": function (k) {
+      var S = tdS();
+      var bar = k.el(null, "td-bar");
+      var add = k.el(bar, "td-btn primary", "+ Note");
+      k.el(bar, "td-btn flat", "Collapse all");
+      var list = k.el(null, "td-list");
+      tdRow(k, list, S.notes[0], 0); tdRow(k, list, S.notes[3], 0);
+      var nr = tdRow(k, list, "", 0); nr.classList.add("gone");
+      k.finger();
+      var t = k.tap(450, add, function () { nr.classList.remove("gone"); nr.classList.add("on"); });
+      k.away(t + 100);
+      t = k.type(t + 250, nr._txt, S.notes[4], 55);
+      k.still(t);
+      k.cls(t + 900, nr, "on", false);
+      return t + 1800;
+    },
+    "notes-tap": function (k) {
+      var S = tdS(), list = k.el(null, "td-list");
+      var r0 = tdRow(k, list, S.notes[0], 0);
+      var r1 = tdRow(k, list, S.notes[3], 0);
+      var kid = tdRow(k, list, "", 1); kid.classList.add("gone");
+      tdRow(k, list, S.notes[2], 0);
+      var plus = k.el(r1, "td-plus", "+");
+      var dock = k.el(null, "td-dock");
+      ["+ After", "Checkbox", "Move", "✕", "Done"].forEach(function (n) { k.el(dock, "td-btn", n); });
+      var done = dock.lastChild;
+      k.finger();
+      var t = k.tap(450, r1._txt, function () { r1.classList.add("on"); dock.classList.add("up"); }, 0.4);
+      t = k.tap(t + 500, plus, function () { kid.classList.remove("gone"); r1._caret.classList.remove("leaf"); r1._dot.classList.add("ring"); });
+      t = k.type(t + 150, kid._txt, S.notes[4], 50);
+      k.still(t);
+      t = k.tap(t + 600, done, function () { dock.classList.remove("up"); r1.classList.remove("on"); });
+      k.away(t);
+      return t + 900;
+    },
+    "notes-bullet": function (k) {
+      var S = tdS();
+      var crumbs = k.el(null, "td-crumbs");
+      var all = k.el(crumbs, "td-crumb", "All notes ›");
+      var here = k.el(crumbs, "td-here", S.notes[0]);
+      var list = k.el(null, "td-list");
+      var a = tdRow(k, list, S.notes[0], 0, true);
+      var a1 = tdRow(k, list, S.notes[1], 1);
+      var a2 = tdRow(k, list, S.notes[2], 1);
+      var b = tdRow(k, list, S.notes[3], 0);
+      function zoom(on) {
+        crumbs.classList.toggle("in", on);
+        a.classList.toggle("gone", on); b.classList.toggle("gone", on);
+        tdDepth(a1, on ? 0 : 1); tdDepth(a2, on ? 0 : 1);
+      }
+      k.finger();
+      var t = k.tap(450, a._dot, function () { zoom(true); });
+      k.still(t + 400);
+      t = k.tap(t + 900, all, function () { zoom(false); });
+      /* hold the bullet, then drag it to the top */
+      var h = 0;
+      t = k.move(t + 500, b._dot);
+      k.press(t + 50);
+      k.at(t + 380, function () { b.classList.add("lift"); h = a.offsetHeight; });
+      k.at(t + 420, function () {
+        b.style.transform = "translateY(" + (-3 * h) + "px)";
+        [a, a1, a2].forEach(function (r) { r.style.transform = "translateY(" + h + "px)"; });
+      });
+      t = k.move(t + 420, function () { var p = k.pos(a._dot); return { x: p.x, y: p.y }; }, null, null, 720);
+      k.at(t + 120, function () {
+        list.classList.add("snap");
+        list.insertBefore(b, a);
+        [a, a1, a2, b].forEach(function (r) { r.style.transform = ""; });
+        b.classList.remove("lift");
+        void list.offsetWidth;
+        list.classList.remove("snap");
+      });
+      k.lift(t + 120);
+      k.away(t + 500);
+      return t + 1500;
+    },
+    "notes-swipe": function (k) {
+      var S = tdS(), list = k.el(null, "td-list");
+      tdRow(k, list, S.notes[0], 0);
+      var r = tdRow(k, list, S.notes[1], 0);
+      tdRow(k, list, S.notes[2], 0);
+      var hint = k.el(null, "td-hint", "");
+      var shift = 38;
+      function swipe(t, dir, label, depth) {
+        var start;
+        t = k.move(t, function () { start = k.pos(r._txt, 0.25); return start; });
+        k.press(t + 40);
+        k.at(t + 120, function () { r.classList.add("drag"); r.style.transform = "translateX(" + dir * shift + "px)"; hint.textContent = label; hint.classList.add("in"); });
+        t = k.move(t + 120, function () { return { x: start.x + dir * shift, y: start.y }; }, null, null, 460);
+        k.at(t + 40, function () { r.classList.remove("drag"); r.style.transform = ""; tdDepth(r, depth); });
+        k.lift(t + 40);
+        k.cls(t + 900, hint, "in", false);
+        return t + 400;
+      }
+      k.finger();
+      var t = swipe(450, 1, "Swipe right: nested under the note above", 1);
+      k.still(t);
+      t = swipe(t + 1300, -1, "Swipe left: pulled back out", 0);
+      k.away(t + 300);
+      return t + 1700;
+    },
+    "notes-collapse": function (k) {
+      var S = tdS();
+      var bar = k.el(null, "td-bar");
+      k.el(bar, "td-btn primary", "+ Note");
+      var fold = k.el(bar, "td-btn flat", "Collapse all");
+      var copy = k.el(bar, "td-btn flat", "Copy outline");
+      var list = k.el(null, "td-list");
+      var a = tdRow(k, list, S.notes[0], 0, true);
+      var kids = [tdRow(k, list, S.notes[1], 1), tdRow(k, list, S.notes[2], 1)];
+      tdRow(k, list, S.notes[3], 0);
+      k.finger();
+      var t = k.tap(450, fold, function () {
+        kids.forEach(function (r) { r.classList.add("gone"); });
+        a._caret.classList.add("shut"); fold.textContent = "Expand all";
+      });
+      k.still(t + 200);
+      t = k.tap(t + 600, copy, function () {});
+      k.toast(t - 300, "Outline copied");
+      t = k.tap(t + 1300, fold, function () {
+        kids.forEach(function (r) { r.classList.remove("gone"); });
+        a._caret.classList.remove("shut"); fold.textContent = "Collapse all";
+      });
+      k.away(t);
+      return t + 900;
+    },
+
+    /* ================= Chapters ================= */
+    "chap-intro": function (k) {
+      var S = tdS(), F = kindInfo().f;
+      var c = k.el(null, "td-chap");
+      tdChapHead(k, c, 1, S.titles[0]);
+      var t = 300;
+      ["goal", "setting", "start", "middle", "end"].forEach(function (key, i) {
+        var ln = k.el(c, "td-fline");
+        k.el(ln, "td-flabel", F[key][2]);
+        var v = k.el(ln, "td-fval");
+        t = k.type(t, v, S.answers[i], 32) + 280;
+      });
+      k.still(t);
+      return t + 1600;
+    },
+    "chap-add": function (k) {
+      var S = tdS();
+      var list = k.el(null, "td-chaps");
+      var c1 = k.el(list, "td-chap mini"); tdChapHead(k, c1, 1, S.titles[0]);
+      var ins = k.el(list, "td-insert gone", "+ Insert chapter here");
+      var cNew = k.el(list, "td-chap mini gone"); var hNew = tdChapHead(k, cNew, 2, "");
+      var c2 = k.el(list, "td-chap mini gone"); var h2 = tdChapHead(k, c2, 2, "");
+      hNew._title.setAttribute("data-ph", "Untitled"); h2._title.setAttribute("data-ph", "Untitled");
+      var add = k.el(null, "td-addbtn", "+ Add chapter");
+      k.finger();
+      var t = k.tap(450, add, function () { c2.classList.remove("gone"); ins.classList.remove("gone"); });
+      k.still(t);
+      t = k.move(t + 700, ins);
+      k.cls(t, ins, "show");
+      t = k.tap(t + 300, ins, function () { cNew.classList.remove("gone"); ins.classList.remove("show"); h2._num.textContent = "3"; });
+      k.away(t + 100);
+      return t + 1700;
+    },
+    "chap-name": function (k) {
+      var S = tdS(), F = kindInfo().f;
+      var c = k.el(null, "td-chap");
+      var h = tdChapHead(k, c, 1, "");
+      h._title.setAttribute("data-ph", "Chapter title");
+      var fold = k.el(h, "td-icon td-fold", "›");
+      var more = k.el(h, "td-icon", "•••");
+      var body = k.el(c, "td-cbody");
+      ["goal", "setting"].forEach(function (key, i) { var ln = k.el(body, "td-fline"); k.el(ln, "td-flabel", F[key][2]); k.el(ln, "td-fval", S.answers[i]); });
+      var menu = k.el(null, "td-menu");
+      ["Move up", "Move down", "Insert a chapter after", "Delete chapter"].forEach(function (n, i) { k.el(menu, i === 3 ? "danger" : "", n); });
+      menu.firstChild.classList.add("off");
+      k.finger();
+      var t = k.tap(400, h._title, null, 0.2);
+      t = k.type(t, h._title, S.titles[0], 60);
+      k.still(t);
+      t = k.tap(t + 400, fold, function () { c.classList.add("shut"); });
+      t = k.tap(t + 700, fold, function () { c.classList.remove("shut"); });
+      t = k.tap(t + 400, more, function () { menu.classList.add("up"); });
+      k.cls(t + 1300, menu, "up", false);
+      k.away(t + 1200);
+      return t + 2100;
+    },
+    "chap-status": function (k) {
+      var S = tdS();
+      var pr = k.el(null, "td-progwrap");
+      var lab = k.el(pr, "td-proglabel", "0% done · 1 chapter");
+      var bar = k.el(pr, "td-prog"); var fill = k.el(bar, "", null, "i");
+      var c = k.el(null, "td-chap");
+      var h = tdChapHead(k, c, 1, S.titles[0]);
+      var meta = k.el(c, "td-meta");
+      var pill = k.el(meta, "td-status", "Outline");
+      pill.style.borderColor = STATUS_COLORS.Outline;
+      if (kindInfo().pov) k.el(meta, "td-pov", S.entries[0][0]);
+      k.el(meta, "td-wc", "1,240 words");
+      var steps = [["Drafted", 33], ["Revised", 66], ["Done", 100]];
+      k.finger();
+      var t = 450;
+      steps.forEach(function (s) {
+        t = k.tap(t, pill, function () {
+          pill.textContent = s[0]; pill.style.borderColor = STATUS_COLORS[s[0]];
+          fill.style.width = s[1] + "%"; lab.textContent = s[1] + "% done · 1 chapter";
+          if (s[0] === "Done") k.bump(h._num);
+        }) + 450;
+      });
+      k.away(t);
+      k.still(t);
+      return t + 1400;
+    },
+    "chap-prompts": function (k) {
+      var S = tdS(), F = kindInfo().f;
+      var c = k.el(null, "td-chap");
+      var fields = ["goal", "setting", "start"].map(function (key) {
+        var f = k.el(c, "td-field");
+        var l = k.el(f, "td-flabel big"); k.el(l, "td-fcaret", "›", "span"); k.el(l, "", F[key][2], "span");
+        var v = k.el(f, "td-fval box"); v.setAttribute("data-ph", F[key][1]);
+        f._label = l; f._val = v;
+        return f;
+      });
+      k.finger();
+      var t = k.tap(450, fields[0]._val, function () { fields[0]._val.classList.add("focus"); }, 0.25);
+      t = k.type(t, fields[0]._val, S.answers[0], 55);
+      k.cls(t + 300, fields[0]._val, "focus", false);
+      k.still(t + 300);
+      t = k.tap(t + 600, fields[1]._label, function () { fields[1].classList.add("shut"); }, 0.3);
+      t = k.tap(t + 900, fields[1]._label, function () { fields[1].classList.remove("shut"); }, 0.3);
+      k.away(t);
+      return t + 900;
+    },
+    "chap-help": function (k) {
+      var S = tdS(), kd = bookKind(), F = kindInfo().f;
+      var c = k.el(null, "td-chap");
+      tdChapHead(k, c, 1, S.titles[0]);
+      var f = k.el(c, "td-field");
+      var l = k.el(f, "td-flabel big"); k.el(l, "td-fcaret", "›", "span"); k.el(l, "", F.setting[2], "span");
+      var qb = k.el(l, "td-q", "?", "span");
+      var v = k.el(f, "td-fval box"); v.setAttribute("data-ph", F.setting[1]);
+      var pane = tdPane(k, "right");
+      var back = k.el(pane, "td-crumb", "‹ Back to chapter 1");
+      k.el(pane, "td-panehead", "Help with: " + F.setting[2]);
+      ((FIELD_HELP[kd] || FIELD_HELP.fiction).setting || []).slice(0, 3).forEach(function (title) { tdLesson(k, pane, title); });
+      k.finger();
+      var t = k.tap(450, qb, function () { pane.classList.add("in"); });
+      k.still(t + 300);
+      t = k.tap(t + 1500, back, function () { pane.classList.remove("in"); }, 0.3);
+      k.away(t);
+      return t + 1000;
+    },
+    "chap-write": function (k) {
+      var S = tdS();
+      var c = k.el(null, "td-chap");
+      tdChapHead(k, c, 1, S.titles[0]);
+      var meta = k.el(c, "td-meta");
+      var pill = k.el(meta, "td-status", "Outline"); pill.style.borderColor = STATUS_COLORS.Outline;
+      k.el(meta, "td-spacer");
+      var w = k.el(meta, "td-btn primary", "Write");
+      var pane = tdPane(k, "below");
+      var head = k.el(pane, "td-phead");
+      k.el(head, "td-btn flat", "← Back");
+      k.el(head, "td-ptitle", "Ch 1 · " + S.titles[0]);
+      var txt = k.el(pane, "td-ptext");
+      var wc = k.el(pane, "td-pfoot", "0 words");
+      k.finger();
+      var t = k.tap(450, w, function () { pane.classList.add("in"); });
+      k.away(t + 100);
+      var words = S.prose.slice(0, 74);
+      t = t + 450;
+      for (var i = 1; i <= words.length; i++) {
+        (function (i) { k.at(t + i * 40, function () { txt.textContent = words.slice(0, i); wc.textContent = tdWordsOf(words.slice(0, i)) + " words"; }); })(i);
+      }
+      t += words.length * 40;
+      k.still(t);
+      return t + 1500;
+    },
+
+    /* ================= The writing page ================= */
+    "write-page": function (k) {
+      var S = tdS();
+      var page = k.el(null, "td-page");
+      var head = tdPageHead(k, page);
+      var txt = k.el(page, "td-ptext typing");
+      var wc = k.el(page, "td-pfoot", "0 words");
+      var t = 500;
+      k.cls(t + 300, head, "dim");
+      var text = S.prose;
+      for (var i = 1; i <= text.length; i++) {
+        (function (i) { k.at(t + i * 34, function () { txt.textContent = text.slice(0, i); wc.textContent = tdWordsOf(text.slice(0, i)) + " words"; }); })(i);
+      }
+      t += text.length * 34;
+      k.still(t);
+      k.cls(t + 900, head, "dim", false);
+      return t + 2000;
+    },
+    "write-plan": function (k) {
+      var S = tdS(), F = kindInfo().f, kd = bookKind();
+      var page = k.el(null, "td-page");
+      var head = tdPageHead(k, page);
+      k.el(page, "td-ptext", S.prose);
+      var side = k.el(null, "td-side");
+      var tabs = k.el(side, "td-stabs");
+      var tOut = k.el(tabs, "on", "Outline", "span");
+      var tRef = k.el(tabs, "", "Reference", "span");
+      var out = k.el(side, "td-sidebody");
+      ["goal", "setting", "start", "end"].forEach(function (key, i) {
+        k.el(out, "td-slabel", F[key][2]);
+        k.el(out, "td-sval", S.answers[i === 3 ? 4 : i]);
+      });
+      var ref = k.el(side, "td-sidebody gone");
+      REFERENCE.filter(function (r) { return (r[3] || "fiction story").split(" ").indexOf(kd) !== -1; })
+        .slice(0, 4).forEach(function (r) { k.el(ref, "td-sref", r[0]); });
+      k.finger();
+      var t = k.tap(450, head._outline, function () { side.classList.add("in"); head._outline.classList.add("on"); });
+      k.still(t + 400);
+      t = k.tap(t + 1200, tRef, function () { tOut.classList.remove("on"); tRef.classList.add("on"); out.classList.add("gone"); ref.classList.remove("gone"); });
+      t = k.tap(t + 1400, head._outline, function () { side.classList.remove("in"); head._outline.classList.remove("on"); });
+      k.away(t);
+      return t + 900;
+    },
+    "write-type": function (k) {
+      var S = tdS();
+      var page = k.el(null, "td-page");
+      var head = tdPageHead(k, page);
+      var panel = k.el(page, "td-typepanel gone");
+      k.el(panel, "td-flabel", "Size");
+      var sl = k.el(panel, "td-slider");
+      var fill = k.el(sl, "", null, "i");
+      var thumb = k.el(sl, "", null, "b");
+      var txt = k.el(page, "td-ptext", S.prose);
+      function setSize(p) {
+        fill.style.width = (p * 100) + "%"; thumb.style.left = (p * 100) + "%";
+        txt.style.fontSize = (10 + p * 3.5).toFixed(1) + "px";
+      }
+      setSize(0.15);
+      k.finger();
+      var t = k.tap(450, head._aa, function () { panel.classList.remove("gone"); head._aa.classList.add("on"); });
+      var start;
+      t = k.move(t + 300, function () { start = k.pos(thumb); return start; });
+      k.press(t + 40);
+      k.at(t + 100, function () { sl.classList.add("drag"); setSize(0.8); });
+      t = k.move(t + 100, function () { var w = sl.offsetWidth; return { x: start.x + w * 0.65, y: start.y }; }, null, null, 800);
+      k.lift(t + 60);
+      k.at(t + 60, function () { sl.classList.remove("drag"); });
+      k.still(t + 100);
+      k.away(t + 400);
+      return t + 1800;
+    },
+    "write-copy": function (k) {
+      var S = tdS();
+      var under = k.el(null, "td-chap");
+      tdChapHead(k, under, 1, S.titles[0]);
+      var meta = k.el(under, "td-meta");
+      var pill = k.el(meta, "td-status", "Drafted"); pill.style.borderColor = STATUS_COLORS.Drafted;
+      k.el(meta, "td-spacer");
+      k.el(meta, "td-btn primary", "Write");
+      var pane = tdPane(k, "below");
+      pane.classList.add("in");
+      var head = tdPageHead(k, pane);
+      k.el(pane, "td-ptext", S.prose);
+      k.finger();
+      var t = k.tap(450, head._copy, function () {});
+      k.toast(t - 300, "Chapter copied");
+      k.still(t);
+      t = k.tap(t + 1400, head._back, function () { pane.classList.remove("in"); });
+      k.away(t + 100);
+      return t + 1500;
+    },
+
+    /* ================= Codex ================= */
+    "codex-intro": function (k) {
+      var S = tdS();
+      var list = k.el(null, "td-entries");
+      var t = 300;
+      S.entries.forEach(function (e) {
+        var c = tdEntry(k, list, e);
+        c.classList.add("gone");
+        k.cls(t, c, "gone", false);
+        t += 700;
+      });
+      k.still(t);
+      return t + 2000;
+    },
+    "codex-add": function (k) {
+      var S = tdS();
+      var list = k.el(null, "td-entries");
+      tdEntry(k, list, S.entries[1]);
+      var c = tdEntry(k, list, ["", "", ""]);
+      c.classList.add("gone", "on");
+      c._name.textContent = ""; c._name.setAttribute("data-ph", "Name");
+      c._type.textContent = "Character";
+      c.firstChild.textContent = "";
+      var add = k.el(null, "td-addbtn", "+ Add entry");
+      var e = S.entries[0];
+      k.finger();
+      var t = k.tap(450, add, function () { c.classList.remove("gone"); });
+      t = k.type(t + 150, c._name, e[0], 70);
+      k.at(t, function () { c.firstChild.textContent = e[0].charAt(0); });
+      t = k.tap(t + 200, c._type, function () { c._type.textContent = e[1]; });
+      k.away(t);
+      t = k.type(t + 100, c._desc, e[2], 40);
+      k.still(t);
+      k.cls(t + 800, c, "on", false);
+      return t + 1700;
+    },
+    "codex-link": function (k) {
+      var S = tdS(), e = S.entries[0];
+      var page = k.el(null, "td-page");
+      var p = k.el(page, "td-ptext");
+      var pre = k.el(p, "", "", "span"), mark = k.el(p, "td-mark", "", "span"), post = k.el(p, "", "", "span");
+      var pop = k.el(null, "td-pop");
+      var pt = k.el(pop, "td-etop"); k.el(pt, "td-ename", e[0]); k.el(pt, "td-etype", e[1]);
+      k.el(pop, "td-edesc", e[2]);
+      var t = k.type(300, pre, S.link[0], 45);
+      t = k.type(t, mark, e[0], 70);
+      k.cls(t + 80, mark, "on");
+      t = k.type(t + 200, post, S.link[1], 40);
+      k.finger();
+      t = k.tap(t + 300, mark, function () { pop.classList.add("up"); mark.classList.add("hot"); });
+      k.still(t + 200);
+      k.away(t + 300);
+      k.cls(t + 2000, pop, "up", false);
+      return t + 2600;
+    },
+    "codex-open": function (k) {
+      var S = tdS();
+      var list = k.el(null, "td-entries");
+      var c = tdEntry(k, list, S.entries[0]);
+      var x = k.el(c, "td-x", "✕");
+      var rows = k.el(c, "td-erows");
+      [["Also known as", "+ Alias"], ["Relations", "+ Relation"], ["Appears in", "Ch 1 · Ch 3"]].forEach(function (r) {
+        var row = k.el(rows, "td-erow"); k.el(row, "td-elabel", r[0], "span"); k.el(row, "td-echip", r[1], "span");
+      });
+      tdEntry(k, list, S.entries[1]);
+      k.finger();
+      var t = k.tap(450, c._name, function () { c.classList.add("open"); }, 0.3);
+      k.still(t + 400);
+      t = k.tap(t + 1200, x, function () { x.classList.add("armed"); x.textContent = "Delete?"; });
+      k.away(t + 200);
+      k.at(t + 1800, function () { x.classList.remove("armed"); x.textContent = "✕"; });
+      return t + 2500;
+    },
+    "codex-find": function (k) {
+      var S = tdS();
+      var search = k.el(null, "td-search"); search.setAttribute("data-ph", "Search the Codex");
+      var chips = k.el(null, "td-chips");
+      var cAll = k.el(chips, "td-chip on", "All");
+      var typeChips = {};
+      S.entries.forEach(function (e) { if (!typeChips[e[1]]) typeChips[e[1]] = k.el(chips, "td-chip", e[1]); });
+      var list = k.el(null, "td-entries");
+      var cards = S.entries.map(function (e) { var c = tdEntry(k, list, e); c._e = e; return c; });
+      var q = S.entries[0][0].slice(0, 2).toLowerCase();
+      function filter(fn) { cards.forEach(function (c) { c.classList.toggle("gone", !fn(c._e)); }); }
+      k.finger();
+      var t = k.tap(450, search, function () { search.classList.add("focus"); }, 0.2);
+      t = k.type(t, search, q, 120);
+      k.at(t + 100, function () { filter(function (e) { return (e[0] + " " + e[2]).toLowerCase().indexOf(q) !== -1; }); });
+      k.still(t + 200);
+      var target = S.entries[1][1];
+      t = k.tap(t + 1100, typeChips[target], function () {
+        search.textContent = ""; search.classList.remove("focus");
+        cAll.classList.remove("on"); typeChips[target].classList.add("on");
+        filter(function (e) { return e[1] === target; });
+      });
+      k.away(t + 200);
+      return t + 1700;
+    },
+
+    /* ================= Book ================= */
+    "book-intro": function (k) {
+      var S = tdS();
+      var stats = k.el(null, "td-proglabel pad", "0 chapters · 0 words");
+      var page = k.el(null, "td-bookpage");
+      var parts = [];
+      parts.push(k.el(page, "td-bh", "1 · " + S.titles[0]));
+      parts.push(tdLines(k, page, [97, 70]));
+      parts.push(k.el(page, "td-break", "*  *  *"));
+      parts.push(k.el(page, "td-bh", "2 · " + S.titles[1]));
+      parts.push(tdLines(k, page, [95, 54]));
+      parts.forEach(function (p) { p.classList.add("gone"); });
+      var t = 300;
+      parts.forEach(function (p, i) {
+        k.cls(t, p, "gone", false);
+        if (i === 1) k.text(t, stats, "1 chapter · 2,140 words");
+        if (i === 4) k.text(t, stats, "2 chapters · 4,120 words");
+        t += 520;
+      });
+      k.still(t);
+      return t + 1900;
+    },
+    "book-opts": function (k) {
+      var S = tdS();
+      var opts = k.el(null, "td-opts");
+      function sw(label, on) {
+        var row = k.el(opts, "td-optrow");
+        k.el(row, "", label, "span");
+        var s = k.el(row, "td-switch" + (on ? " on" : ""), null, "span");
+        k.el(s, "", null, "i");
+        return s;
+      }
+      var only = sw("Only drafted chapters", false);
+      var nums = sw("Chapter numbers", true);
+      var page = k.el(null, "td-bookpage");
+      var heads = [S.titles[0], S.titles[1], ""].map(function (title, i) {
+        var h = k.el(page, "td-bh");
+        k.el(h, "td-bnum", (i + 1) + " · ", "span");
+        k.el(h, "", title || "Untitled", "span");
+        if (!title) { h.classList.add("empty"); k.el(h, "td-emptytag", "  (nothing written)", "span"); }
+        return h;
+      });
+      k.finger();
+      var t = k.tap(450, only, function () { only.classList.add("on"); heads[2].classList.add("gone"); });
+      k.still(t + 300);
+      t = k.tap(t + 900, nums, function () { nums.classList.remove("on"); page.classList.add("nonum"); });
+      t = k.tap(t + 1300, nums, function () { nums.classList.add("on"); page.classList.remove("nonum"); });
+      t = k.tap(t + 300, only, function () { only.classList.remove("on"); heads[2].classList.remove("gone"); });
+      k.away(t);
+      return t + 900;
+    },
+    "book-export": function (k) {
+      var S = tdS();
+      var bar = k.el(null, "td-bar wrap");
+      var copy = k.el(bar, "td-btn primary", "Copy manuscript");
+      var md = k.el(bar, "td-btn", "Download .md");
+      k.el(bar, "td-btn", "Download .html");
+      var page = k.el(null, "td-bookpage short");
+      k.el(page, "td-bh", "1 · " + S.titles[0]);
+      tdLines(k, page, [94, 80]);
+      var file = k.el(null, "td-file");
+      k.el(file, "td-fileicon", null, "span");
+      k.el(file, "", (S.titles[0].replace(/[^A-Za-z]/g, "") || "Book") + ".md", "span");
+      k.finger();
+      var t = k.tap(450, copy, function () {});
+      k.toast(t - 300, "Manuscript copied");
+      t = k.tap(t + 1500, md, function () { file.classList.add("in"); });
+      k.still(t + 300);
+      k.away(t + 200);
+      k.cls(t + 1800, file, "in", false);
+      return t + 2300;
+    },
+
+    /* ================= Learn ================= */
+    "learn-intro": function (k) {
+      var kd = bookKind();
+      var s = k.el(null, "td-search"); s.setAttribute("data-ph", "What are you stuck on?");
+      var cats = ["Story structure", "Character", "Scene & chapter", "Process & revision"];
+      if (kd === "story") cats = ["True stories"].concat(cats.slice(0, 3));
+      if (kd === "teach") cats = ["Teaching books", "Prose & voice", "On the page", "Process & revision"];
+      var box = k.el(null, "td-groups");
+      var t = 300;
+      cats.forEach(function (cat) {
+        var g = k.el(box, "td-group gone");
+        k.el(g, "td-fcaret", "›", "span");
+        k.el(g, "", cat, "span");
+        k.el(g, "td-gn", String(LIB.filter(function (d) { return d.cat === cat; }).length), "span");
+        k.cls(t, g, "gone", false);
+        t += 450;
+      });
+      k.still(t);
+      return t + 2000;
+    },
+    "learn-search": function (k) {
+      var S = tdS();
+      var s = k.el(null, "td-search"); s.setAttribute("data-ph", "What are you stuck on?");
+      var res = k.el(null, "td-results");
+      var found = searchLessons(S.search).slice(0, 3);
+      k.finger();
+      var t = k.tap(400, s, function () { s.classList.add("focus"); }, 0.2);
+      k.away(t + 100);
+      t = k.type(t + 100, s, S.search, 65);
+      k.at(t + 250, function () {
+        found.forEach(function (d, i) {
+          var r = tdLesson(k, res, d.title, d.label);
+          r.style.transitionDelay = (i * 90) + "ms";
+          r.classList.add("gone"); void r.offsetWidth; r.classList.remove("gone");
+        });
+      });
+      k.still(t + 300);
+      return t + 2800;
+    },
+    "learn-stuck": function (k) {
+      var list = (STUCK[bookKind()] || STUCK.fiction).slice(0, 4);
+      k.el(null, "td-kicker", "I'm stuck on…");
+      var chips = k.el(null, "td-chips loose");
+      var cs = list.map(function (s) { return k.el(chips, "td-chip", s[0]); });
+      var pane = tdPane(k, "right");
+      var pick = list[2];
+      k.el(pane, "td-panehead", pick[0]);
+      pick[1].slice(0, 3).forEach(function (title) { tdLesson(k, pane, title); });
+      k.finger();
+      var t = k.tap(450, cs[2], function () { pane.classList.add("in"); });
+      k.still(t + 300);
+      k.away(t + 100);
+      k.cls(t + 2200, pane, "in", false);
+      return t + 2900;
+    },
+    "learn-course": function (k) {
+      var c = course(), L = CL();
+      var step = Math.min(c.enrolled ? c.step : 0, L.length - 1);
+      var card = k.el(null, "td-card");
+      var row = k.el(card, "td-crow");
+      var txt = k.el(row, "td-ctext");
+      k.el(txt, "td-ltitle", c.enrolled ? "Continue your course" : "Start the course");
+      k.el(txt, "td-src", kindInfo().name);
+      k.el(row, "td-cval", "Lesson " + (step + 1) + " of " + L.length);
+      var bar = k.el(card, "td-prog"); var fill = k.el(bar, "", null, "i");
+      fill.style.width = Math.round(step / L.length * 100) + "%";
+      var pane = tdPane(k, "below");
+      k.el(pane, "td-kicker", L[step].part);
+      k.el(pane, "td-panehead", L[step].title);
+      tdLines(k, pane, [96, 90, 74]);
+      var go = k.el(pane, "td-btn primary", "Go do it");
+      k.finger();
+      var t = k.tap(450, row, function () { pane.classList.add("in"); }, 0.3);
+      k.still(t + 300);
+      t = k.move(t + 500, go);
+      k.away(t + 900);
+      k.cls(t + 1800, pane, "in", false);
+      return t + 2500;
+    },
+    "learn-browse": function (k) {
+      var kd = bookKind();
+      var cats = kd === "teach" ? ["Teaching books", "Prose & voice", "Process & revision"]
+               : kd === "story" ? ["True stories", "Character", "Scene & chapter"]
+               : ["Character", "Story structure", "Scene & chapter"];
+      var box = k.el(null, "td-groups");
+      var first = null, body = null, lesson = null, sum = null;
+      cats.forEach(function (cat, i) {
+        var g = k.el(box, "td-group");
+        var caret = k.el(g, "td-fcaret", "›", "span");
+        k.el(g, "", cat, "span");
+        var items = LIB.filter(function (d) { return d.cat === cat; });
+        k.el(g, "td-gn", String(items.length), "span");
+        if (i === 0) {
+          first = g; g._caret = caret;
+          body = k.el(box, "td-gbody gone");
+          items.slice(0, 3).forEach(function (d, j) {
+            var r = tdLesson(k, body, d.title);
+            if (j === 0) { lesson = r; sum = k.el(r, "td-lsum gone", d.sum); }
+          });
+        }
+      });
+      k.finger();
+      var t = k.tap(450, first, function () { body.classList.remove("gone"); first._caret.classList.add("open"); }, 0.3);
+      k.still(t + 300);
+      t = k.tap(t + 900, lesson, function () { sum.classList.remove("gone"); }, 0.4, 0.3);
+      k.away(t + 200);
+      return t + 2600;
+    }
   };
 
   var TOUR_STEPS = [
     { title: "Get it out of your head", intro: true, view: null, target: null, section: "What this is",
       body: "An idea kept in your head stays the same size forever. You turn it over, it feels almost ready, and nothing gets written. This app exists to get the thing somewhere you can look at it, where it is allowed to be wrong and still count as progress. That is the purpose. Everything else here serves it." },
-    { title: "Where things go", intro: true, view: null, target: null, section: "What this is",
-      body: "Notes is for thinking, in a list that branches as far down as you need. Chapters is where a note becomes a plan and then a draft. Codex remembers your people and places so you do not have to. Book puts the finished chapters together as a manuscript you can export. Learn holds every lesson, with a search for the day you get stuck." },
+    { title: "Where things go", intro: true, view: null, target: null, section: "What this is", demo: "intro-tabs",
+      body: "Notes is for thinking, in a list that branches as far down as you need. Chapters is where a note becomes a plan and then a draft. Codex remembers your people and places so you do not have to. Book puts the finished chapters together as a manuscript you can export. Learn holds every lesson, with a search for the day you get stuck. Writing more than one book? The books button at the top holds them all." },
     { title: "What are you writing?", intro: true, pick: true, view: null, target: null, section: "What this is",
       body: "The chapter prompts and the lessons are different for each of these. Pick the closest one. You can change it in Settings whenever you like, and read the other lessons too." },
     { title: "Two ways in", intro: true, fork: true, view: null, target: null, section: "What this is",
@@ -3726,6 +5737,9 @@
       state.consistency = d.consistency || null;
       state.unlocked = d.unlocked || null;
       state.customThemes = Array.isArray(d.customThemes) ? d.customThemes : [];
+      state.books = Array.isArray(d.books) ? d.books : null;
+      state.series = Array.isArray(d.series) ? d.series : [];
+      state.activeBook = d.activeBook || null;
       if (d.map && typeof d.map === "object") {
         state.map = { nodes: Array.isArray(d.map.nodes) ? d.map.nodes : [],
                       edges: Array.isArray(d.map.edges) ? d.map.edges : [],
@@ -3749,6 +5763,7 @@
       }
     }
   } catch (e) {}
+  ensureBooks();
 
   var pendingMergeToast = null; // no auto-import in the public build
 
@@ -4308,10 +6323,9 @@
      "since last time" always means since you last saw this card, however many
      times you reopen the app in between. */
   function sessionCounts() {
-    var words = 0;
-    state.chapters.forEach(function (c) { words += wordsOf(c.draft); });
-    return { date: todayKey(), words: words, chapters: state.chapters.length,
-             notes: state.map.nodes.length, codex: state.codex.length };
+    /* Across every book, so opening another book is not "writing" it. */
+    var t = allBooksTotals();
+    return { date: todayKey(), words: t.words, chapters: t.chapters, notes: t.notes, codex: t.codex };
   }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
 
@@ -4457,8 +6471,7 @@
      start from now — the baseline resets each day and the delta is clamped at
      zero so deleting text never reads as negative writing. */
   function trackWords() {
-    var total = 0;
-    state.chapters.forEach(function (ch) { total += wordsOf(ch.draft); });
+    var total = allBooksTotals().words;
     if (!state.wordBaseline || state.wordBaseline.date !== todayKey()) {
       state.wordBaseline = { date: todayKey(), total: total };
     }
@@ -7288,15 +9301,23 @@
       state.consistency = d.consistency || null;
       state.unlocked = d.unlocked || null;
       state.customThemes = Array.isArray(d.customThemes) ? d.customThemes : [];
+      /* A backup from before there were books has none of these, and
+         becomes a single book. */
+      state.books = Array.isArray(d.books) ? d.books : null;
+      state.series = Array.isArray(d.series) ? d.series : [];
+      state.activeBook = d.activeBook || null;
       state.map = (d.map && typeof d.map === "object")
         ? { nodes: Array.isArray(d.map.nodes) ? d.map.nodes : [], edges: Array.isArray(d.map.edges) ? d.map.edges : [],
             frames: Array.isArray(d.map.frames) ? d.map.frames : [], view: d.map.view || { x: 0, y: 0, z: 1 } }
         : { nodes: [], edges: [], frames: [], view: { x: 0, y: 0, z: 1 } };
       if (d.settings) state.settings = { theme: d.settings.theme || "ink", draftFont: d.settings.draftFont || 17, draftLine: d.settings.draftLine || 18, accent: d.settings.accent || null, splitOn: !!d.settings.splitOn, splitPos: typeof d.settings.splitPos === "number" ? d.settings.splitPos : 50, splitRight: d.settings.splitRight === "ledger" ? "ledger" : "codex", lastView: d.settings.lastView || null, themeAuto: !!d.settings.themeAuto, resumeChapter: d.settings.resumeChapter !== false, lastChapterId: d.settings.lastChapterId || null, haptics: d.settings.haptics !== false, guideInMast: d.settings.guideInMast !== false };
+      ensureBooks();
       document.getElementById("title").value = state.title;
       applyKind();
       applySettings(); renderSettings(); save(); idbPut(JSON.stringify(state)); applySplit(); renderCodexIfSplit();
-      note.textContent = "Restored: " + state.chapters.length + " chapters, " + state.codex.length + " codex entries, " + state.ledger.length + " ledger items.";
+      note.textContent = state.books.length > 1
+        ? "Restored " + state.books.length + " books. The one open now has " + plural(state.chapters.length, "chapter") + " and " + plural(state.codex.length, "Codex entry", "Codex entries") + "."
+        : "Restored: " + plural(state.chapters.length, "chapter") + " and " + plural(state.codex.length, "Codex entry", "Codex entries") + ".";
       note.className = "set-note ok";
       document.getElementById("restoreArea").value = "";
     } catch (e) {
@@ -7456,6 +9477,9 @@
     }
     clearArmed = false;
     state = { title: "", chapters: [], codex: [], customTypes: [], ledger: [], writingDays: state.writingDays, dailyWords: state.dailyWords, wordBaseline: state.wordBaseline, sessionSnap: state.sessionSnap, course: state.course, consistency: state.consistency, unlocked: state.unlocked, map: { nodes: [], edges: [], frames: [], view: { x: 0, y: 0, z: 1 } }, customThemes: state.customThemes, settings: { theme: state.settings.theme, draftFont: 17, draftLine: 18, accent: state.settings.accent, splitOn: state.settings.splitOn, splitPos: state.settings.splitPos, splitRight: state.settings.splitRight, lastView: state.settings.lastView, themeAuto: state.settings.themeAuto, resumeChapter: state.settings.resumeChapter, lastChapterId: state.settings.lastChapterId, haptics: state.settings.haptics, guideInMast: state.settings.guideInMast } };
+    /* Everything means every book: one empty book is left, the way the app starts. */
+    state.books = null; state.series = []; state.activeBook = null;
+    ensureBooks();
     /* Must clear BOTH stores. Writing only localStorage left IndexedDB holding
        the old book, which then reappeared on the next load. */
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
@@ -9584,11 +11608,16 @@
     state.consistency = d.consistency || null;
     state.unlocked = d.unlocked || null;
     state.customThemes = Array.isArray(d.customThemes) ? d.customThemes : [];
+    state.books = Array.isArray(d.books) ? d.books : null;
+    state.series = Array.isArray(d.series) ? d.series : [];
+    state.activeBook = d.activeBook || null;
     if (d.map && typeof d.map === "object") {
       state.map = { nodes: Array.isArray(d.map.nodes) ? d.map.nodes : [],
                     edges: Array.isArray(d.map.edges) ? d.map.edges : [],
                     frames: Array.isArray(d.map.frames) ? d.map.frames : [],
                     view: d.map.view || { x: 0, y: 0, z: 1 } };
+    } else {
+      state.map = emptyMap();
     }
     if (d.settings) {
       state.settings.theme = d.settings.theme || state.settings.theme;
@@ -9601,6 +11630,7 @@
       state.settings.resumeChapter = d.settings.resumeChapter !== false;
       state.settings.lastChapterId = d.settings.lastChapterId || null;
     }
+    ensureBooks();
     applyKind();
     invalidateCodexIndex();
     migrateToTree();
@@ -9785,6 +11815,33 @@
       card.style.top = Math.round(top) + "px";
     }
 
+    /* The top of the usable screen: below the header, or the very top on the
+       writing page, which covers the header. */
+    function safeTop() {
+      if (document.body.classList.contains("tour-top")) return 8;
+      var m = document.querySelector(".masthead");
+      var b = m ? m.getBoundingClientRect().bottom : 0;
+      return Math.max(8, Math.min(b, window.innerHeight * 0.4)) + 6;
+    }
+    /* A card with a demonstration in it is tall. Centring the target can
+       leave no room above or below it for the card, which then lands on top
+       of the very thing it is describing. First the demonstration is drawn
+       smaller if even the whole screen is too short; then the target is
+       scrolled up to just under the header, which leaves the most room below. */
+    function makeRoom(el, r) {
+      var blocked = bottomBlock(), top0 = safeTop();
+      function need() { return card.offsetHeight + 24; }
+      function fits(rr) { return (window.innerHeight - blocked - rr.bottom) >= need() || (rr.top - top0) >= need(); }
+      if (fits(r)) return r;
+      if (window.innerHeight - blocked - top0 - r.height < need()) demoCompact(true);
+      if (fits(r)) return r;
+      if (window.innerHeight - blocked - top0 - r.height >= need()) {
+        window.scrollBy(0, r.top - top0);
+        r = el.getBoundingClientRect();
+      }
+      return r;
+    }
+
     function positionTourUI(selector) {
       clearTimeout(posTimer);
       clearTimeout(posTimer2);
@@ -9801,7 +11858,7 @@
       spotlight.style.display = "none";
       function place() {
         el.scrollIntoView({ block: "center" });
-        var r = el.getBoundingClientRect();
+        var r = makeRoom(el, el.getBoundingClientRect());
         spotlight.style.display = "block";
         spotlight.style.left = (r.left - 7) + "px";
         spotlight.style.top = (r.top - 7) + "px";
@@ -9905,6 +11962,8 @@
         inSec.length > 1 ? posInSec + " of " + inSec.length : "";
       document.getElementById("tourTitle").textContent = step.title;
       document.getElementById("tourBody").textContent = step.body;
+      /* Before the card is placed, so its height includes the demonstration. */
+      demoPlay(step.demo);
       renderTourSchedule(step);
       var fork = document.getElementById("tourFork");
       if (fork) {
@@ -9995,6 +12054,7 @@
       if (tourKey) {
         /* A walkthrough leaves you where you are, on the screen it described. */
         var k = tourKey; tourKey = null; tourList = TOUR_STEPS;
+        demoPlay(null);
         clearTimeout(posTimer); clearTimeout(posTimer2);
         document.body.classList.remove("touring", "tour-top", "spot-chrome");
         overlay.classList.remove("open"); cardWrap.classList.remove("open");
@@ -10003,6 +12063,7 @@
         window.scrollTo({ top: 0, behavior: "auto" });
         return;
       }
+      demoPlay(null);
       ensureSchedule();
       if (typeof closeSetPage === "function") closeSetPage();
       clearTimeout(posTimer);

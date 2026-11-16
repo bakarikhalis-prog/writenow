@@ -44,6 +44,8 @@ If you don't see the icon, use the **⋮** menu → **Cast, save and share** →
 
 **Back up anyway.** Settings → Backup & Restore → Copy backup. The app holds your work in browser storage, which is durable but not permanent — a device wipe or a browser reset takes it with everything else. The backup is a single file you keep.
 
+**More than one book.** The books button at the top holds every book you're writing. Each has its own chapters, notes and Codex; books in a series share one Codex. A backup covers every book, and you can export or import a single book from the shelf.
+
 **Two devices don't sync.** Each install is its own copy. To move work between them, take a backup on one and restore it on the other.
 
 ---
