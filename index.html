@@ -820,10 +820,10 @@
     font-family: var(--font-ui); font-size: 0.8824rem; line-height: 1.38;
     min-height: 0;
   }
-  .note-text textarea:focus {
-    background: var(--field-bg); border-color: var(--field-border);
-    box-shadow: inset 0 1px 2px var(--inset-focus);
-  }
+  /* Editing happens in place: the row's tint says which note is open, so the
+     note itself does not turn into a form box with a resize handle. */
+  .note-text textarea { resize: none; }
+  .note-text textarea:focus { background: transparent; border-color: transparent; box-shadow: none; }
   .note-row:hover .note-text .rich-view { background: var(--inset); }
   /* A hairline down each level makes depth readable at a glance without
      needing a wide indent, which matters most on a phone. */
@@ -868,8 +868,11 @@
     width: 6px; height: 6px; border-radius: 50%;
     background: var(--ink-faint); transition: background var(--dur-fast) var(--ease-out);
   }
-  /* A ring says there is something inside this one worth zooming into. */
+  /* A ring says there are notes inside. Folded, the ring fills in, so a
+     closed branch is visible at a glance. */
   .note-bullet.has-kids i { box-shadow: 0 0 0 4px var(--line); }
+  .note-bullet.has-kids.folded i { background: var(--pencil); box-shadow: 0 0 0 4px rgb(var(--pencil-rgb) / 0.28); }
+  .note-bullet:not(.has-kids) { cursor: grab; }
   .note-bullet:hover i { background: var(--pencil); }
   .note-bullet::after {
     content: ""; position: absolute; left: 0; top: 50%;
@@ -887,6 +890,9 @@
     transform: translateY(-50%);
   }
   .note-head .note-bullet { width: 22px; }
+  /* The bullet is the row's only control now, so it takes the whole margin
+     to its left as well as its own width. */
+  .note-head .note-bullet::after { left: -14px; width: calc(100% + 18px); }
   /* A note with nothing under it has no arrow, so its bullet takes that room too. */
   .note-head .note-caret.leaf + .note-bullet::after { left: -32px; width: calc(100% + 36px); }
 
@@ -908,6 +914,41 @@
     font-weight: 600; line-height: 1.25; color: var(--ink); padding-top: 3px;
     min-width: 0; overflow-wrap: anywhere;
   }
+  /* ---------- An open note ---------- */
+  .note-back {
+    display: inline-flex; align-items: center; gap: 4px; background: none; cursor: pointer;
+    border: 1px solid var(--card-border); border-radius: 999px; padding: 6px 14px 6px 10px; min-height: 44px;
+    font-family: var(--font-ui); font-size: 0.8235rem; color: var(--pencil); margin-right: 6px;
+  }
+  .note-back:hover { border-color: var(--pencil); }
+  .note-page[hidden] { display: none; }
+  .note-page { margin: 4px 0 10px; }
+  .note-page-title {
+    width: 100%; resize: none; overflow: hidden; background: transparent; border: 0; box-shadow: none;
+    padding: 2px 0; margin: 0; font-family: var(--font-ui); font-size: 1.2941rem; font-weight: 600;
+    line-height: 1.3; color: var(--ink); border-radius: 6px; min-height: 0;
+  }
+  .note-page-title:focus { background: var(--inset); outline: none; }
+  .note-page .field { margin: 6px 0 0; }
+  .note-page .note-page-body, .note-page .rich-view.note-page-body {
+    font-family: var(--font-page); font-size: 0.9412rem; line-height: 1.6; min-height: 88px;
+    background: transparent; border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; box-shadow: none;
+  }
+  .note-page .note-page-body:focus { border-style: solid; border-color: var(--field-border); background: var(--field-bg); outline: none; }
+  .note-page-label {
+    font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 16px 0 2px;
+  }
+  /* A note with writing inside shows its first line under it, so you can
+     tell it holds more than its title. Tapping it opens the note. */
+  .note-peek {
+    display: block; margin: -2px 0 4px 26px; padding: 0 6px; background: none; border: 0; cursor: pointer;
+    font-family: var(--font-page); font-size: 0.7647rem; color: var(--ink-faint); text-align: left;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 26px); min-height: 0;
+  }
+  .note-peek:hover { color: var(--pencil); }
+  /* On the narrowest phones Delete moves into More, so Open fits. */
+  @media (max-width: 370px) { #noteBar .nb-mid { display: none; } }
   .note-branch-empty {
     font-family: var(--font-ui); font-size: 0.8235rem; color: var(--ink-faint);
     padding: 10px 0 2px;
@@ -988,6 +1029,18 @@
   }
   .note-tool:hover { border-color: var(--pencil); color: var(--pencil); }
   .note-tool.danger:hover, .note-tool.armed { border-color: var(--red); color: var(--red); }
+  .note-tool:disabled { opacity: 0.38; cursor: default; border-color: var(--card-border); color: var(--ink-dim); }
+  /* Below this width Checkbox lives in More, so the bar fits a small phone. */
+  @media (max-width: 419px) { #noteBar .nb-wide { display: none; } }
+  /* On a laptop or a tablet the bar sits under the note being written,
+     instead of at the bottom edge of a wide screen far from it. */
+  body.nb-near #noteBar {
+    position: absolute; left: 0; right: auto; bottom: auto; width: max-content; max-width: calc(100vw - 32px);
+    border: 1px solid var(--card-border); border-radius: 14px; box-shadow: var(--card-shadow);
+    padding: 6px 8px; background: var(--card-bg); transform: none; transition: none; z-index: 120;
+  }
+  body.nb-near #noteBar .nb-done { margin-left: 6px; }
+  body.nb-near.note-bar-open #viewMap { padding-bottom: 64px; }
   @media (max-width: 640px) {
     .note-tool { min-height: 44px; min-width: 44px; padding: 5px 9px; }
     /* Indentation is the structure, so it is never flattened — only tightened. */
@@ -1056,7 +1109,11 @@
   @media (hover: none) { .chap-insert { opacity: 0.45; border-top-color: var(--hairline); } }
   /* ---------- Mind map ---------- */
   .map-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .map-hint { font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 0.04em; color: var(--ink-faint); }
+  /* One line, at a size people actually read. It used to teach three
+     gestures in 11px type; the buttons now explain themselves. */
+  .map-hint { font-family: var(--font-ui); font-size: 0.8235rem; line-height: 1.45; color: var(--ink-dim); margin: -4px 0 10px; }
+  .notes-bar .tf-btn.note-more { font-size: 1.4118rem; font-weight: 700; line-height: 1; min-width: 44px; color: var(--ink); padding: 0 10px 6px; }
+  .empty-plan { margin-left: 8px; }
   .map-canvas {
     position: relative; height: 70vh; min-height: 380px; border-radius: 16px; overflow: hidden;
     border: 1px solid var(--card-border); background: var(--page);
@@ -1557,6 +1614,14 @@
     width: max-content; max-width: calc(100vw - 24px); pointer-events: none;
   }
   #toastStack > * { pointer-events: auto; }
+  #noteToast { display: none; align-items: center; gap: 10px; max-width: 100%;
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px;
+    padding: 6px 8px 6px 12px; box-shadow: var(--card-shadow); }
+  #noteToast.show { display: flex; animation: cardIn var(--dur-move) var(--ease-spring); }
+  #noteToast .nt-text { font-family: var(--font-ui); font-size: 0.7647rem; line-height: 1.4; color: var(--ink); }
+  #noteToast .nt-undo { flex-shrink: 0; background: none; border: 1px solid var(--line); color: var(--pencil);
+    font-family: var(--font-ui); font-size: 0.7647rem; font-weight: 600; padding: 6px 14px; border-radius: 999px;
+    cursor: pointer; min-height: 44px; }
   #saveAlarm {
     position: relative; transform: translateY(-180%); z-index: 1;
     display: none; align-items: center; gap: 10px; max-width: 100%;
@@ -2096,6 +2161,9 @@
               transform: rotate(90deg); transition: transform .3s var(--ease-out); }
   .td-caret.shut { transform: none; }
   .td-caret.leaf { visibility: hidden; }
+  .td-row .td-caret { display: none; }
+  .td-dot.shut { background: var(--pencil); box-shadow: 0 0 0 3px rgb(var(--pencil-rgb) / 0.28); }
+  .td-dock .td-btn.off { opacity: 0.4; }
   .td-dot { flex: 0 0 5px; width: 5px; height: 5px; margin: 0 3px; border-radius: 50%; background: rgb(var(--ink-rgb) / 0.45);
             transition: box-shadow .3s; }
   .td-dot.ring { box-shadow: 0 0 0 3px var(--line); }
@@ -2330,6 +2398,24 @@
   .td-tabs span.on { color: var(--pencil); }
   .td-tabind { position: absolute; top: -1px; height: 2px; background: var(--pencil); transition: left .4s var(--ease-out), width .4s var(--ease-out); }
 
+  /* ---------- Shared devices: the start screen and Save and finish ----------
+     Opaque on purpose: the screen behind may still hold the last student's work. */
+  #gateSheet { position: fixed; inset: 0; z-index: 400; display: none;
+    background: rgb(var(--stock-rgb)); align-items: center; justify-content: center; padding: 16px; }
+  #gateSheet.open { display: flex; }
+  .gate-card { border-radius: 16px; width: min(460px, 100%); padding: 22px 20px 20px; }
+  .gate-kick { font-family: var(--font-ui); font-size: 0.6471rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pencil); margin-bottom: 4px; }
+  .gate-p { font-family: var(--font-page); font-size: 0.9412rem; line-height: 1.5; color: var(--ink); margin: 10px 0 0; }
+  .gate-p b { overflow-wrap: anywhere; }
+  .gate-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+  .gate-input { width: 100%; margin-top: 12px; }
+  .fork-btn.primary-fork { border-color: var(--pencil); background: rgb(var(--pencil-rgb) / 0.10); }
+  .fork-btn.danger-fork { border-color: var(--red); }
+  .fork-btn.danger-fork .fork-k { color: var(--red); }
+  #gateNote { margin-top: 12px; }
+  #gateNote:empty { display: none; }
+  .finish-btn { white-space: nowrap; }
+
   /* ---------- The bookshelf ---------- */
   #shelfSheet { position: fixed; inset: 0; z-index: 205; display: none;
     background: rgba(0,0,0,0.45); align-items: flex-end; justify-content: center; }
@@ -2402,6 +2488,9 @@
   .shelf-toast .mt-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pencil); flex-shrink: 0; }
   .shelf-toast .mt-text { font-family: var(--font-ui); font-size: 0.7647rem; line-height: 1.4; color: var(--ink); }
 
+  .teach-guide p { font-family: var(--font-ui); font-size: 0.8235rem; line-height: 1.55; color: var(--ink); margin: 0 0 10px; }
+  .teach-guide b { color: var(--ink); }
+
   /* An unnamed book should not be the loudest thing on every screen. */
   .title-input:placeholder-shown { font-size: 1.0588rem; }
   .title-input { transition: font-size var(--dur-move) var(--ease-out); }
@@ -2424,6 +2513,7 @@
           <button class="tab-btn" id="tabLearn">Learn</button>
         </div>
         <button class="guide-toggle" id="courseBadge" style="display:none">Lesson 1</button>
+        <button class="guide-toggle finish-btn" id="finishBtn" style="display:none">Save &amp; finish</button>
         <span class="save" id="saveState"><span class="dot"></span>Auto-save on</span>
         <button class="mast-icon" id="shelfBtn" aria-label="Your books" title="Your books">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -2565,6 +2655,29 @@
 
 
 
+      <div class="set-card" data-cat="teachers">
+        <h3>In your classroom</h3>
+        <div class="teach-guide">
+          <p>WriteNow Jr. teaches the three kinds of writing most middle-school standards ask for: stories (narrative), true stories (personal narrative), and explaining and opinion writing (informational and argument). Each has its own course of twenty short lessons. Every lesson explains one idea, shows a good example, names a common mistake, and ends with one small task the student does in the app.</p>
+          <p><b>Pacing.</b> One or two lessons fit a class period, with time to write. The app checks most tasks itself and moves the student on when the task is done, so a class can work at different speeds without anyone waiting.</p>
+          <p><b>Privacy.</b> There are no accounts, no internet connection and no data collection. Nothing a student writes leaves the device unless they copy or save it themselves.</p>
+          <p><b>Handing in work.</b> In the Book tab, a student can copy the whole piece or save it as a file that opens in any browser and prints cleanly. From the books button, Export this book saves a single book as a file you can collect.</p>
+          <p><b>Shared devices.</b> If students take turns on a device, choose “Students take turns” the first time the app opens, or switch it on below. Each student's work then lives in a file they keep, not on the device. Have them save it somewhere that's theirs: their school Google Drive or OneDrive, a USB stick, or a class folder you collect. On Chromebooks where students sign in with their own account, each account already keeps its own work.</p>
+          <p><b>Getting unstuck.</b> The Learn tab has every lesson, a search that takes questions in a student's own words, and a list of the troubles students hit most. The ? beside each chapter prompt opens the lessons for that part of the writing.</p>
+        </div>
+      </div>
+      <div class="set-card" data-cat="teachers">
+        <h3>This device</h3>
+        <div id="teacherDevice"></div>
+        <div class="set-row-cap" style="margin:8px 0 0">When students take turns, the app opens on a start screen. Each student opens the file they saved last time, or starts new. When they're done, Save and finish saves one file holding their writing, their lessons and where they are, then clears the device for the next student.</div>
+      </div>
+      <div class="set-card" data-cat="teachers">
+        <h3>Printable lesson sheets</h3>
+        <div class="set-row-cap" style="margin:0 0 10px">One page per lesson: the idea, an example, what to watch out for, and the task, with lines for notes. Each downloads as a file that opens in any browser; print it from there.</div>
+        <div id="teacherSheets"></div>
+        <div class="set-note" id="teacherNote"></div>
+      </div>
+
       <div class="set-card" data-cat="learn">
         <h3>What you're writing</h3>
         <div class="set-row-cap" style="margin:0 0 10px">For the book you have open. It sets the prompts on each chapter and which course you take. Nothing you have written changes.</div>
@@ -2649,16 +2762,21 @@
     <div id="viewMap">
       <div class="notes-bar">
         <button class="tf-btn primary" id="mapAdd">+ Note</button>
-        <button class="tf-btn" id="noteFoldAll">Collapse all</button>
-        <button class="tf-btn" id="noteCopy">Copy outline</button>
-        <span class="map-hint" id="mapHint">Tap to write. Swipe a note right to nest it under the one above, left to pull it back out. Tap a bullet to open that branch on its own.</span>
+        <button class="tf-btn note-more" id="noteMore" aria-haspopup="menu" aria-label="More for notes">⋯</button>
+        <!-- Reached from the ⋯ menu. Kept as buttons so their handlers and
+             the copy note below stay where they were. -->
+        <div hidden><button class="tf-btn" id="noteFoldAll">Collapse all</button><button class="tf-btn" id="noteCopy">Copy outline</button></div>
       </div>
+      <div class="map-hint" id="mapHint"></div>
       <div class="note-crumbs" id="noteCrumbs" hidden></div>
+      <!-- An open note: its title, room to write, then the notes inside it. -->
+      <div class="note-page" id="notePage" hidden></div>
       <div class="notes-list" id="notesList"></div>
       <div class="notes-empty" id="notesEmpty">
         <h2>A blank page</h2>
         <p>Put down the first idea, whatever it is. A character, an image, a question you can't answer yet. Add notes underneath it as the shape starts to show.</p>
         <button type="button" class="tf-btn primary empty-go" id="notesEmptyGo">Write the first note</button>
+        <button type="button" class="tf-btn empty-go empty-plan" id="notesPlanGo" style="display:none">Start from a plan</button>
       </div>
       <div class="set-note" id="mapCopyNote"></div>
     </div>
@@ -2741,6 +2859,16 @@
 
   <!-- The bookshelf: every book, grouped by series, and the way to start,
        import, export or delete one. -->
+  <div id="gateSheet" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+    <div class="ms-card gate-card">
+      <div class="gate-kick" id="gateKick">WriteNow Jr.</div>
+      <h2 class="shelf-title" id="gateTitle"></h2>
+      <div id="gateBody"></div>
+      <div class="gate-actions" id="gateActions"></div>
+      <div class="set-note" id="gateNote"></div>
+      <input type="file" id="gateFile" accept=".json,application/json,text/plain" style="display:none" />
+    </div>
+  </div>
   <div id="shelfSheet" role="dialog" aria-modal="true" aria-labelledby="shelfTitle">
     <div class="ms-card shelf-card">
       <div class="shelf-top">
@@ -2808,6 +2936,7 @@
   </div>
 
   <div id="toastStack">
+  <div id="noteToast" role="status"><span class="nt-text"></span><button type="button" class="nt-undo" id="noteUndo">Undo</button></div>
   <div id="shelfToast" class="shelf-toast" role="status"><span class="mt-dot"></span><span class="mt-text"></span></div>
   <div id="reminderToast" role="status">
     <span class="rt-dot"></span>
@@ -3065,6 +3194,32 @@
            end:     ["Ends \u2014 what to do next", "The takeaway in one line, and one thing the reader can try today.", "Ends", "No ending yet."] },
       strip: [["Each point", "<b>Claim</b> \u00b7 <b>Proof</b> \u00b7 <b>Example</b>"], ["Test", "could they <b>do it</b> after reading this?"]],
       codex: "Your reader, your key terms and your sources, so a definition never drifts between chapters." }
+  };
+  /* Which edition this file is. The middle-school edition (WriteNow Jr.) is
+     built from this same file by a script that swaps the lessons and flips
+     this to "jr"; everything else is shared, so a fix lands in both. */
+  var EDITION = "adult";
+  /* How the lesson library is grouped. Kept in one place because the kids'
+     edition groups its lessons differently, and five parts of the app (the
+     library, its search, the daily advice and two walkthrough animations)
+     need to agree about which group belongs to which kind of book. */
+  var LIB_CATS = {
+    order: ["Story structure", "Character", "Point of view", "Scene & chapter", "Prose & voice",
+            "On the page", "World & theme", "Process & revision", "True stories", "Teaching books"],
+    story: "True stories",
+    teach: "Teaching books",
+    ref: "On the page",
+    general: ["Process & revision", "Prose & voice"],
+    demo: {
+      fiction: ["Story structure", "Character", "Scene & chapter", "Process & revision"],
+      story: ["True stories", "Story structure", "Character", "Scene & chapter"],
+      teach: ["Teaching books", "Prose & voice", "On the page", "Process & revision"]
+    },
+    browse: {
+      fiction: ["Character", "Story structure", "Scene & chapter"],
+      story: ["True stories", "Character", "Scene & chapter"],
+      teach: ["Teaching books", "Prose & voice", "Process & revision"]
+    }
   };
   function bookKind() {
     var k = state.course && state.course.track;
@@ -3663,6 +3818,258 @@
       shelfNote("This browser won't save files. A full backup in Settings has every book in it.", true);
     }
   }
+  /* ---------- Shared devices (WriteNow Jr.) ----------
+     In a classroom where students take turns on one device, nothing should be
+     left on it between them. Each student's file carries everything: their
+     books, which lesson they are on, their writing days and which walkthroughs
+     they have seen. The device keeps one thing of its own: whether it is
+     shared. A shared device opens on a start screen, and Save and finish
+     saves the student's file and, once they have checked it is there, clears
+     the device for the next student. Only the kids' edition offers this. */
+  var DEVICE_KEY = STORAGE_KEY.replace(":v1", ":device");
+  var TUTORIAL_KEY = STORAGE_KEY.replace(":v1", ":tutorial:seen");
+  var deviceClearing = false;
+  function deviceInfo() {
+    try { return JSON.parse(localStorage.getItem(DEVICE_KEY) || "null"); } catch (e) { return null; }
+  }
+  function setDeviceInfo(d) { try { localStorage.setItem(DEVICE_KEY, JSON.stringify(d)); } catch (e) {} }
+  function sharedDevice() { if (EDITION !== "jr") return false; var d = deviceInfo(); return !!(d && d.shared); }
+  /* True while the first-open question or the start screen is due, so the
+     intro waits for it instead of opening underneath. */
+  function sharedGatePending() {
+    if (EDITION !== "jr") return false;
+    var d = deviceInfo();
+    return !d || !!d.shared;
+  }
+  function deviceHasWork() {
+    var t = allBooksTotals();
+    return t.words > 0 || t.chapters > 0 || t.notes > 0 || t.codex > 0 || !!(state.course && state.course.enrolled);
+  }
+  function studentName() { return String(state.student || "").trim(); }
+  function studentFileName(tag) {
+    var d = new Date(), p2 = function (n) { return ("0" + n).slice(-2); };
+    var who = studentName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "my";
+    return who + "-writenow-jr" + (tag ? "-" + tag : "") + "-" + d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()) + ".json";
+  }
+  function idbClearAll() {
+    return idbOpen().then(function (db) {
+      return new Promise(function (resolve) {
+        if (!db) { resolve(false); return; }
+        try {
+          var tx = db.transaction(IDB_STORE, "readwrite");
+          tx.objectStore(IDB_STORE).clear();
+          tx.oncomplete = function () { resolve(true); };
+          tx.onerror = tx.onabort = function () { resolve(false); };
+        } catch (e) { resolve(false); }
+      });
+    }).catch(function () { return false; });
+  }
+  /* Everything this student left on the device goes. The page reloads so no
+     screen, cache or half-open sheet can carry anything across. */
+  function clearDevice() {
+    deviceClearing = true;
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    [STORAGE_KEY, TOURS_KEY, TUTORIAL_KEY, SEEDED_FLAG].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+    var d = deviceInfo() || {};
+    d.shared = true; d.active = false;
+    setDeviceInfo(d);
+    idbClearAll().then(function () { location.reload(); });
+  }
+  /* Saves the student's file. Where the browser offers a save dialog, the
+     student picks the place (on a Chromebook that includes Google Drive);
+     elsewhere it downloads. cb(ok, name). */
+  function saveStudentFile(tag, cb) {
+    var name = studentFileName(tag), txt = backupJSON();
+    function download() {
+      try {
+        var blob = new Blob([txt], { type: "application/json" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        cb(true, name);
+      } catch (e) { cb(false, name); }
+    }
+    if (typeof window.showSaveFilePicker === "function" && window.self === window.top) {
+      window.showSaveFilePicker({ suggestedName: name, types: [{ description: "WriteNow Jr. work", accept: { "application/json": [".json"] } }] })
+        .then(function (h) {
+          return h.createWritable().then(function (w) { return w.write(txt).then(function () { return w.close(); }); })
+            .then(function () { cb(true, h.name || name); });
+        })
+        .catch(function (e) { if (e && e.name === "AbortError") cb(false, null, true); else download(); });
+    } else download();
+  }
+
+  var gateMode = null;
+  function gateEl(id) { return document.getElementById(id); }
+  function gateOpen(mode) {
+    gateMode = mode;
+    gateEl("gateSheet").classList.add("open");
+    gateEl("gateSheet").setAttribute("data-mode", mode);
+    renderGate();
+  }
+  function gateClose() {
+    gateMode = null;
+    gateEl("gateSheet").classList.remove("open");
+  }
+  function gateNote(t, bad) {
+    var n = gateEl("gateNote");
+    n.textContent = t || "";
+    n.className = "set-note" + (t ? (bad ? " err" : " ok") : "");
+  }
+  function gateButton(host, k, d, fn, cls) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "fork-btn" + (cls ? " " + cls : "");
+    var a = document.createElement("span"); a.className = "fork-k"; a.textContent = k; b.appendChild(a);
+    if (d) { var s = document.createElement("span"); s.className = "fork-d"; s.textContent = d; b.appendChild(s); }
+    b.addEventListener("click", fn);
+    host.appendChild(b);
+    return b;
+  }
+  function renderGate() {
+    var title = gateEl("gateTitle"), body = gateEl("gateBody"), acts = gateEl("gateActions");
+    var kick = gateEl("gateKick");
+    body.innerHTML = ""; acts.innerHTML = ""; gateNote("");
+    kick.textContent = "WriteNow Jr.";
+    var p = function (t) { var e = document.createElement("p"); e.className = "gate-p"; e.textContent = t; body.appendChild(e); return e; };
+    var d = deviceInfo() || {};
+    if (gateMode === "ask") {
+      title.textContent = "Who uses this device?";
+      p("This helps the app keep everyone's writing in the right place. A teacher can change it later in Settings.");
+      gateButton(acts, "Just me", "My own tablet or computer.", function () {
+        setDeviceInfo({ shared: false });
+        gateClose(); applySharedChrome();
+        if (!deviceHasWork() && startIntroTour) startIntroTour();
+      });
+      gateButton(acts, "Students take turns", "A class set, a library computer, a shared iPad.", function () {
+        setDeviceInfo({ shared: true, active: deviceHasWork() });
+        applySharedChrome(); gateOpen("start");
+      });
+      return;
+    }
+    if (gateMode === "start" && d.active && deviceHasWork()) {
+      var who = studentName() || "Someone";
+      title.textContent = who === "Someone" ? "Someone's work is still open" : who + "'s work is still open";
+      p("They didn't tap Save and finish last time.");
+      gateButton(acts, who === "Someone" ? "It's mine. Keep going" : "I'm " + who + (/[.!?]$/.test(who) ? "" : ".") + " Keep going", "Pick up right where you left off.", function () {
+        gateClose(); renderCourseBadge(); setView(state.settings.lastView || "map");
+      });
+      gateButton(acts, "Save it for them and start fresh", "Their work is saved as a file on this device for your teacher, then cleared.", function () {
+        saveStudentFile("not-finished", function (ok, name) {
+          if (!ok) { gateNote("That didn't save, so nothing was cleared. Ask your teacher.", true); return; }
+          gateNote("Saved " + name + ". Clearing…");
+          setTimeout(clearDevice, 900);
+        });
+      });
+      return;
+    }
+    if (gateMode === "start") {
+      title.textContent = "Who's writing?";
+      p("Open the file you saved last time and everything comes back: your writing, your lessons, and where you were.");
+      gateButton(acts, "Open my work", "Pick the file you saved last time.", function () { gateEl("gateFile").click(); }, "primary-fork");
+      gateButton(acts, "I'm new here", "Start your first piece.", function () { gateOpen("name"); });
+      return;
+    }
+    if (gateMode === "name") {
+      title.textContent = "What's your name?";
+      p("Your first name and the first letter of your last name. It goes on your file so your teacher knows it's yours.");
+      var inp = document.createElement("input");
+      inp.type = "text"; inp.className = "shelf-input gate-input"; inp.id = "gateName";
+      inp.placeholder = "Maya R."; inp.maxLength = 30; inp.autocomplete = "off";
+      body.appendChild(inp);
+      var go = gateButton(acts, "Start", "", function () {
+        var nm = inp.value.trim();
+        if (!nm) { gateNote("Type your name first.", true); inp.focus(); return; }
+        state.student = nm;
+        var dd = deviceInfo() || {}; dd.shared = true; dd.active = true; setDeviceInfo(dd);
+        save(); gateClose();
+        if (startIntroTour) startIntroTour();
+      }, "primary-fork");
+      inp.addEventListener("keydown", function (e) { if (e.key === "Enter") go.click(); });
+      gateButton(acts, "Back", "", function () { gateOpen("start"); });
+      setTimeout(function () { inp.focus(); }, 60);
+      return;
+    }
+    if (gateMode === "finish") {
+      title.textContent = "Save and finish";
+      kick.textContent = studentName() || "WriteNow Jr.";
+      p("Your file holds everything: your writing, your lessons, and where you are in them. Next time, open it and pick up where you left off.");
+      p("Save it somewhere that's yours, like your school Google Drive or OneDrive, a USB stick, or wherever your teacher tells you.");
+      if (!studentName()) {
+        var ni = document.createElement("input");
+        ni.type = "text"; ni.className = "shelf-input gate-input"; ni.id = "gateName";
+        ni.placeholder = "Your name, like Maya R."; ni.maxLength = 30;
+        body.appendChild(ni);
+      }
+      gateButton(acts, "Save my file", "", function () {
+        var ni2 = gateEl("gateName");
+        if (ni2) {
+          if (!ni2.value.trim()) { gateNote("Type your name first.", true); ni2.focus(); return; }
+          state.student = ni2.value.trim(); save();
+        }
+        saveStudentFile("", function (ok, name, cancelled) {
+          if (cancelled) { gateNote("Not saved. Nothing was cleared."); return; }
+          if (!ok) { gateNote("This browser wouldn't save the file. Nothing was cleared. Ask your teacher.", true); return; }
+          gateSaved = name; gateOpen("saved");
+        });
+      }, "primary-fork");
+      gateButton(acts, "Keep writing", "", gateClose);
+      return;
+    }
+    if (gateMode === "saved") {
+      title.textContent = "Can you see your file?";
+      var e1 = p("Saved as "); var b1 = document.createElement("b"); b1.textContent = gateSaved || ""; e1.appendChild(b1); e1.appendChild(document.createTextNode("."));
+      p("Check it's where you meant to put it. Once you clear this device, that file is the only copy of your work.");
+      gateButton(acts, "Yes, clear this device", "The next student starts fresh.", function () { clearDevice(); }, "danger-fork");
+      gateButton(acts, "Save it again", "", function () { gateOpen("finish"); });
+      gateButton(acts, "Keep writing", "", gateClose);
+      return;
+    }
+  }
+  var gateSaved = null;
+  /* The Save and finish button only exists on a shared device. */
+  function applySharedChrome() {
+    var b = document.getElementById("finishBtn");
+    if (b) b.style.display = sharedDevice() ? "" : "none";
+  }
+  function sharedBoot() {
+    if (EDITION !== "jr") return;
+    applySharedChrome();
+    var d = deviceInfo();
+    if (!d) { gateOpen("ask"); return; }
+    if (d.shared) gateOpen("start");
+  }
+  (function () {
+    var fb = document.getElementById("finishBtn");
+    if (fb) fb.addEventListener("click", function () { gateOpen("finish"); });
+    var fi = document.getElementById("gateFile");
+    fi.addEventListener("change", function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        var ok = doRestore(String(r.result));
+        if (!ok) { gateNote("That file couldn't be opened. Make sure it's the one WriteNow Jr. saved for you.", true); return; }
+        var dd = deviceInfo() || {}; dd.shared = true; dd.active = true; setDeviceInfo(dd);
+        gateClose();
+        renderCourseBadge();
+        setView(state.settings.lastView || "map");
+        var c = state.course, L = (c && c.enrolled && c.step < CL().length) ? CL()[c.step] : null;
+        var nm = studentName();
+        showToastOnce("Welcome back" + (nm ? ", " + nm : "") + (/[.!?]$/.test(nm) ? "" : ".") + (L ? " You're on lesson " + (c.step + 1) + ": " + L.title + "." : ""));
+      };
+      r.readAsText(f);
+      this.value = "";
+    });
+    window.addEventListener("beforeunload", function (e) {
+      if (deviceClearing || !sharedDevice()) return;
+      var d = deviceInfo();
+      if (!d || !d.active || !deviceHasWork()) return;
+      e.preventDefault();
+      e.returnValue = "";
+    });
+  })();
+
   function showToastOnce(msg) {
     var t = document.getElementById("shelfToast");
     if (!t) return;
@@ -3722,8 +4129,8 @@
     var groups = document.querySelectorAll("#guide .g-group");
     if (!groups.length) return;
     var parent = groups[0].parentNode, after = groups[groups.length - 1].nextSibling;
-    var ts = parent.querySelector('.g-group[data-cat="True stories"]');
-    var tb = parent.querySelector('.g-group[data-cat="Teaching books"]');
+    var ts = parent.querySelector('.g-group[data-cat="' + LIB_CATS.story + '"]');
+    var tb = parent.querySelector('.g-group[data-cat="' + LIB_CATS.teach + '"]');
     if (ts) parent.insertBefore(ts, after);
     if (tb) parent.insertBefore(tb, after);
     var first = bookKind() === "story" ? ts : bookKind() === "teach" ? tb : null;
@@ -3745,7 +4152,17 @@
     for (var k in DEFAULT_COURSE) if (!(k in state.course)) state.course[k] = DEFAULT_COURSE[k];
     return state.course;
   }
-  function courseGoal() { return Math.max(1, course().goal || 200); }
+  var LESSON_WORDS = {
+    good: "What good looks like", wrong: "Where people go wrong",
+    allDone: "All nineteen lessons complete", doneTitle: "You finished a book",
+    doneBody: "That is the hard part, and most people never get there. Every lesson stays under Learn whenever you want to look something up, and the next one is easier than this one was.",
+    lastNext: "That was the last one. You have written and finished a book.",
+    courseNames: { fiction: "Fiction course", story: "True story course", teach: "Teaching book course" },
+    readFor: { fiction: "fiction", story: "a true story", teach: "a teaching book" }
+  };
+  var FLOOR_DEFAULT = 200;
+  var FLOOR_NOTE = "A target you miss teaches you that you fail at this. A floor you clear teaches you that you turn up. Pick a number you could hit on a bad day.";
+  function courseGoal() { return Math.max(1, course().goal || FLOOR_DEFAULT); }
   function courseStep() { return CL()[Math.min(course().step, CL().length - 1)]; }
   var courseView = null;            /* null = follow progress */
   function courseViewIdx() {
@@ -3780,7 +4197,7 @@
     var nextL = CL()[Math.min(course().step, CL().length - 1)];
     var finished = course().step >= CL().length;
     document.getElementById("cdNext").textContent = finished
-      ? "That was the last one. You have written and finished a book."
+      ? LESSON_WORDS.lastNext
       : "Next: " + nextL.title;
     document.getElementById("cdGo").textContent = finished ? "See the end" : "Next lesson";
     card.classList.add("open");
@@ -3828,8 +4245,8 @@
     var bodyEl = document.getElementById("csBody");
     bodyEl.innerHTML = "";
     bodyEl.appendChild(csSection("The idea", L.idea));
-    if (L.good) bodyEl.appendChild(csSection("What good looks like", L.good));
-    if (L.wrong) bodyEl.appendChild(csSection("Where people go wrong", L.wrong));
+    if (L.good) bodyEl.appendChild(csSection(LESSON_WORDS.good, L.good));
+    if (L.wrong) bodyEl.appendChild(csSection(LESSON_WORDS.wrong, L.wrong));
     var task = document.getElementById("csTask");
     task.style.display = ""; task.textContent = L.task;
     document.getElementById("csGoal").style.display = "none";
@@ -3888,18 +4305,17 @@
 
     document.getElementById("csPart").textContent = finished ? "Done" : L.part;
     document.getElementById("csStep").textContent = finished
-      ? "All nineteen lessons complete"
+      ? LESSON_WORDS.allDone
       : "Lesson " + (idx + 1) + " of " + p.total + (reviewing ? " \u00b7 done" : "");
-    document.getElementById("csTitle").textContent = finished ? "You finished a book" : L.title;
+    document.getElementById("csTitle").textContent = finished ? LESSON_WORDS.doneTitle : L.title;
     var bodyEl = document.getElementById("csBody");
     bodyEl.innerHTML = "";
     if (finished) {
-      bodyEl.appendChild(csSection(null,
-        "That is the hard part, and most people never get there. Every lesson stays under Learn whenever you want to look something up, and the next one is easier than this one was."));
+      bodyEl.appendChild(csSection(null, LESSON_WORDS.doneBody));
     } else if (L.idea) {
       bodyEl.appendChild(csSection("The idea", L.idea));
-      if (L.good) bodyEl.appendChild(csSection("What good looks like", L.good));
-      if (L.wrong) bodyEl.appendChild(csSection("Where people go wrong", L.wrong));
+      if (L.good) bodyEl.appendChild(csSection(LESSON_WORDS.good, L.good));
+      if (L.wrong) bodyEl.appendChild(csSection(LESSON_WORDS.wrong, L.wrong));
     } else {
       bodyEl.appendChild(csSection(null, L.body));
     }
@@ -3915,10 +4331,9 @@
     if (!finished && L.goal) {
       var inp = document.getElementById("csGoalInput");
       inp.value = courseGoal();
-      document.getElementById("csGoalNote").textContent =
-        "A target you miss teaches you that you fail at this. A floor you clear teaches you that you turn up. Pick a number you could hit on a bad day.";
+      document.getElementById("csGoalNote").textContent = FLOOR_NOTE;
       inp.onchange = function () {
-        c.goal = Math.max(25, Math.min(2000, parseInt(inp.value, 10) || 200));
+        c.goal = Math.max(25, Math.min(2000, parseInt(inp.value, 10) || FLOOR_DEFAULT));
         inp.value = c.goal;
         save();
       };
@@ -4066,7 +4481,7 @@
       idea: "One note is a sentence. A note with three things underneath it is the beginning of a structure, and the difference matters more than it sounds. When you break an idea into parts, you find out which parts you actually have opinions about and which were doing nothing. You are not committing to a plot. You are finding the edges of what you already think, which is impossible while it is all one blurred impression.",
       good: "The three things underneath can be anything: a consequence, a complication, a person who would object, a question the first note raises. Notes that ask questions are often more useful than notes that assert, because a question is a hole you will later want to fill. If you write down that your character cannot leave the island, the useful children are not descriptions of the island. They are why not, who benefits, and what happens if she tries.",
       wrong: "Filling the branches with detail rather than with pressure. Three notes about what the island looks like tell you nothing about the story. Three notes about what the island costs her tell you most of it.",
-      task: "Add three notes underneath your first one \u2014 the + at the end of a row puts one there. Questions count. So do things you are unsure about.",
+      task: "Add three notes underneath your first one. Tap it, press Return for a new note, then tap In to tuck it under. Return again keeps you at that level. Questions count. So do things you are unsure about.",
       view: "map", check: function () {
         var kids = {};
         state.map.nodes.forEach(function (n) { if (n.parentId) kids[n.parentId] = (kids[n.parentId] || 0) + 1; });
@@ -4227,7 +4642,7 @@
       idea: "You have written and finished something, which is the hard part and the part most people never reach. Everything you just learned still applies at any length: the same five fields, the same schedule, the same floor. What changes with a longer book is only how many times you repeat the loop, and that the middle needs more structure to keep from sagging.",
       good: "Start the next one before the last one stops feeling real. Five chapters instead of three, the same three-movement shape inside each act. The second book is always easier than the first, and enormously easier than the first one abandoned.",
       wrong: "Waiting until you feel like a writer to start the next one. That feeling arrives after several finished things, not before the next one. Start it on your next scheduled day.",
-      task: "Start your next book.",
+      task: "Tap the books button at the top and start your next book.",
       view: "map", manual: true, check: function () { return false; },
       more: [] }
   ];
@@ -4249,7 +4664,7 @@
    "idea": "One memory is a sentence. A memory with three things underneath it starts to be a scene. Under your first note, put down what you can still see, hear or smell from that moment, who else was there, and what you do not know. The things you do not know matter as much as the rest, because they tell you what you will have to find out or admit.",
    "good": "Mary Karr calls the details worth having carnal: the ones that come through the body. The smell of the kitchen, what the chair felt like, what was on the radio. Those are what make a reader believe you were there, and they are also the ones that prove to you that you were.",
    "wrong": "Writing conclusions where the details should be. \u201cIt was a hard year\u201d is a verdict. The reader was not there and cannot agree with you yet. Put down what the hard year looked like at seven in the morning.",
-   "task": "Add three notes underneath your first one \u2014 the + at the end of a row puts one there. What you saw, who was there, what you still do not know.",
+   "task": "Add three notes underneath your first one. Tap it, press Return for a new note, then tap In to tuck it under. Return again keeps you at that level. What you saw, who was there, what you still do not know.",
    "more": [
     "Scene and summary"
    ]
@@ -4399,7 +4814,7 @@
    "idea": "When you know how to do something well, it feels like one thing. To someone who cannot do it yet, it is several, in an order. Under your first note, put down the steps, the ideas they need first, and the mistakes people make. You will find out quickly which parts you can explain and which you do by feel and have never put into words.",
    "good": "Marie Kondo's method is strict about order: clothes, then books, then papers, then everything else, and sentimental things last. Whether you like the method or not, a reader always knows where they are in it. Your three notes do not have to be right yet. They have to exist so you can argue with them.",
    "wrong": "Listing topics where the steps should be. \u201cBudgeting, saving, investing\u201d is a table of contents for a book nobody can use. \u201cFind out what you spend\u201d is something a person can do on Tuesday.",
-   "task": "Add three notes underneath your first one \u2014 the + at the end of a row puts one there. Steps, ideas they need first, or mistakes people make.",
+   "task": "Add three notes underneath your first one. Tap it, press Return for a new note, then tap In to tuck it under. Return again keeps you at that level. Steps, ideas they need first, or mistakes people make.",
    "more": [
     "Put the steps in the order the reader will do them"
    ]
@@ -4544,6 +4959,10 @@
       return n;
     });
   }
+  if (COURSE_OVER.fiction) COURSE_F.forEach(function (L) {
+    var o = COURSE_OVER.fiction[L.id];
+    if (o) for (var k in o) L[k] = o[k];
+  });
   COURSES.fiction = COURSE_F;
   COURSES.story = buildTrack(COURSE_OVER.story);
   COURSES.teach = buildTrack(COURSE_OVER.teach);
@@ -4665,7 +5084,7 @@
     return !!SECTION_TOURS[k] && !s.all && !s.off && !s[k];
   }
   function anySheetOpen() {
-    var ids = ["courseSheet", "dailyCard", "courseDone", "recapSheet"];
+    var ids = ["courseSheet", "dailyCard", "courseDone", "recapSheet", "gateSheet"];
     for (var i = 0; i < ids.length; i++) {
       var el = document.getElementById(ids[i]);
       if (el && el.classList.contains("open")) return true;
@@ -4685,17 +5104,9 @@
   var SECTION_TOURS = {
     map: function () { return [
       { section: "Notes", title: "This is where the thinking goes", demo: "notes-intro",
-        body: "Anything you are not ready to call a chapter belongs here: ideas, questions, scraps, lists. It is an outline, so any note can hold more notes underneath it, as deep as you need." },
-      { section: "Notes", title: "Start a note", demo: "notes-start", target: ["#notesEmptyGo", "#mapAdd"],
-        body: "This adds a note. Type, then press Return for the next one. Nothing here has to be good. It has to be out of your head." },
-      { section: "Notes", title: "Tap a note to write in it", demo: "notes-tap", target: [".note-row .note-text"],
-        body: "Tap any note to change it. The + at the end of a row adds a note underneath that one, which is how one idea becomes three. While a note is open, a bar at the bottom offers a checkbox, Move and delete." },
-      { section: "Notes", title: "The bullet", demo: "notes-bullet", target: [".note-row .note-bullet"],
-        body: "Tap a bullet to open that note on its own, with only what sits under it. Hold the bullet and drag to move the note somewhere else. The small arrow beside it folds the notes underneath out of sight." },
-      { section: "Notes", title: "Swipe to change level", demo: "notes-swipe",
-        body: "Swipe a note to the right to tuck it under the one above. Swipe left to pull it back out. If you would rather use buttons, tap the note and choose Move from the bar at the bottom." },
-      { section: "Notes", title: "Collapse and copy", demo: "notes-collapse", target: ["#noteCopy"],
-        body: "Collapse all folds the outline down to its top level. Copy outline puts the whole thing on your clipboard as plain text, ready to paste anywhere." }
+        body: "Anything you are not ready to call a chapter belongs here: ideas, questions, scraps, lists. Any note can hold more notes under it. Nothing here has to be good. It has to be out of your head." },
+      { section: "Notes", title: "Write, then move it in", demo: "notes-inout", target: [".note-row .note-text", "#notesEmptyGo", "#mapAdd"],
+        body: "Tap a note to write in it, and press Return to start the next one. The bar that opens with it moves a note In, under the one above, or Out again. Open gives a note a page of its own, with room to write and notes inside. A bullet with a ring has notes inside: tap it to fold them away." }
     ]; },
     chapters: function () {
       var F = kindInfo().f;
@@ -5049,131 +5460,33 @@
       k.still(t);
       return t + 1700;
     },
-    "notes-start": function (k) {
-      var S = tdS();
-      var bar = k.el(null, "td-bar");
-      var add = k.el(bar, "td-btn primary", "+ Note");
-      k.el(bar, "td-btn flat", "Collapse all");
-      var list = k.el(null, "td-list");
-      tdRow(k, list, S.notes[0], 0); tdRow(k, list, S.notes[3], 0);
-      var nr = tdRow(k, list, "", 0); nr.classList.add("gone");
-      k.finger();
-      var t = k.tap(450, add, function () { nr.classList.remove("gone"); nr.classList.add("on"); });
-      k.away(t + 100);
-      t = k.type(t + 250, nr._txt, S.notes[4], 55);
-      k.still(t);
-      k.cls(t + 900, nr, "on", false);
-      return t + 1800;
-    },
-    "notes-tap": function (k) {
+    /* Write, then move it in: tap a note, the bar comes up, In tucks it
+       under the note above, the ringed bullet folds and unfolds, Done. */
+    "notes-inout": function (k) {
       var S = tdS(), list = k.el(null, "td-list");
-      var r0 = tdRow(k, list, S.notes[0], 0);
-      var r1 = tdRow(k, list, S.notes[3], 0);
-      var kid = tdRow(k, list, "", 1); kid.classList.add("gone");
-      tdRow(k, list, S.notes[2], 0);
-      var plus = k.el(r1, "td-plus", "+");
+      var a = tdRow(k, list, S.notes[0], 0);
+      var b = tdRow(k, list, S.notes[1], 0);
+      var c = tdRow(k, list, S.notes[3], 0);
       var dock = k.el(null, "td-dock");
-      ["+ After", "Checkbox", "Move", "✕", "Done"].forEach(function (n) { k.el(dock, "td-btn", n); });
-      var done = dock.lastChild;
-      k.finger();
-      var t = k.tap(450, r1._txt, function () { r1.classList.add("on"); dock.classList.add("up"); }, 0.4);
-      t = k.tap(t + 500, plus, function () { kid.classList.remove("gone"); r1._caret.classList.remove("leaf"); r1._dot.classList.add("ring"); });
-      t = k.type(t + 150, kid._txt, S.notes[4], 50);
-      k.still(t);
-      t = k.tap(t + 600, done, function () { dock.classList.remove("up"); r1.classList.remove("on"); });
-      k.away(t);
-      return t + 900;
-    },
-    "notes-bullet": function (k) {
-      var S = tdS();
-      var crumbs = k.el(null, "td-crumbs");
-      var all = k.el(crumbs, "td-crumb", "All notes ›");
-      var here = k.el(crumbs, "td-here", S.notes[0]);
-      var list = k.el(null, "td-list");
-      var a = tdRow(k, list, S.notes[0], 0, true);
-      var a1 = tdRow(k, list, S.notes[1], 1);
-      var a2 = tdRow(k, list, S.notes[2], 1);
-      var b = tdRow(k, list, S.notes[3], 0);
-      function zoom(on) {
-        crumbs.classList.toggle("in", on);
-        a.classList.toggle("gone", on); b.classList.toggle("gone", on);
-        tdDepth(a1, on ? 0 : 1); tdDepth(a2, on ? 0 : 1);
-      }
-      k.finger();
-      var t = k.tap(450, a._dot, function () { zoom(true); });
-      k.still(t + 400);
-      t = k.tap(t + 900, all, function () { zoom(false); });
-      /* hold the bullet, then drag it to the top */
-      var h = 0;
-      t = k.move(t + 500, b._dot);
-      k.press(t + 50);
-      k.at(t + 380, function () { b.classList.add("lift"); h = a.offsetHeight; });
-      k.at(t + 420, function () {
-        b.style.transform = "translateY(" + (-3 * h) + "px)";
-        [a, a1, a2].forEach(function (r) { r.style.transform = "translateY(" + h + "px)"; });
-      });
-      t = k.move(t + 420, function () { var p = k.pos(a._dot); return { x: p.x, y: p.y }; }, null, null, 720);
-      k.at(t + 120, function () {
-        list.classList.add("snap");
-        list.insertBefore(b, a);
-        [a, a1, a2, b].forEach(function (r) { r.style.transform = ""; });
-        b.classList.remove("lift");
-        void list.offsetWidth;
-        list.classList.remove("snap");
-      });
-      k.lift(t + 120);
-      k.away(t + 500);
-      return t + 1500;
-    },
-    "notes-swipe": function (k) {
-      var S = tdS(), list = k.el(null, "td-list");
-      tdRow(k, list, S.notes[0], 0);
-      var r = tdRow(k, list, S.notes[1], 0);
-      tdRow(k, list, S.notes[2], 0);
+      var outB = k.el(dock, "td-btn off", "\u2039 Out");
+      var inB = k.el(dock, "td-btn", "In \u203a");
+      k.el(dock, "td-btn", "Open"); k.el(dock, "td-btn", "More");
+      var done = k.el(dock, "td-btn", "Done");
       var hint = k.el(null, "td-hint", "");
-      var shift = 38;
-      function swipe(t, dir, label, depth) {
-        var start;
-        t = k.move(t, function () { start = k.pos(r._txt, 0.25); return start; });
-        k.press(t + 40);
-        k.at(t + 120, function () { r.classList.add("drag"); r.style.transform = "translateX(" + dir * shift + "px)"; hint.textContent = label; hint.classList.add("in"); });
-        t = k.move(t + 120, function () { return { x: start.x + dir * shift, y: start.y }; }, null, null, 460);
-        k.at(t + 40, function () { r.classList.remove("drag"); r.style.transform = ""; tdDepth(r, depth); });
-        k.lift(t + 40);
-        k.cls(t + 900, hint, "in", false);
-        return t + 400;
-      }
+      function say(t, text) { k.at(t, function () { hint.textContent = text; hint.classList.add("in"); }); k.cls(t + 1300, hint, "in", false); }
       k.finger();
-      var t = swipe(450, 1, "Swipe right: nested under the note above", 1);
-      k.still(t);
-      t = swipe(t + 1300, -1, "Swipe left: pulled back out", 0);
-      k.away(t + 300);
-      return t + 1700;
-    },
-    "notes-collapse": function (k) {
-      var S = tdS();
-      var bar = k.el(null, "td-bar");
-      k.el(bar, "td-btn primary", "+ Note");
-      var fold = k.el(bar, "td-btn flat", "Collapse all");
-      var copy = k.el(bar, "td-btn flat", "Copy outline");
-      var list = k.el(null, "td-list");
-      var a = tdRow(k, list, S.notes[0], 0, true);
-      var kids = [tdRow(k, list, S.notes[1], 1), tdRow(k, list, S.notes[2], 1)];
-      tdRow(k, list, S.notes[3], 0);
-      k.finger();
-      var t = k.tap(450, fold, function () {
-        kids.forEach(function (r) { r.classList.add("gone"); });
-        a._caret.classList.add("shut"); fold.textContent = "Expand all";
+      var t = k.tap(450, b._txt, function () { b.classList.add("on"); dock.classList.add("up"); }, 0.4);
+      t = k.tap(t + 500, inB, function () {
+        tdDepth(b, 1); a._dot.classList.add("ring"); outB.classList.remove("off"); inB.classList.add("off");
       });
+      say(t + 80, "In: now it sits under the note above");
+      t = k.tap(t + 1500, done, function () { dock.classList.remove("up"); b.classList.remove("on"); });
+      t = k.tap(t + 500, a._dot, function () { b.classList.add("gone"); a._dot.classList.add("shut"); });
+      say(t + 80, "A ringed bullet folds what is inside");
+      t = k.tap(t + 1500, a._dot, function () { b.classList.remove("gone"); a._dot.classList.remove("shut"); });
       k.still(t + 200);
-      t = k.tap(t + 600, copy, function () {});
-      k.toast(t - 300, "Outline copied");
-      t = k.tap(t + 1300, fold, function () {
-        kids.forEach(function (r) { r.classList.remove("gone"); });
-        a._caret.classList.remove("shut"); fold.textContent = "Collapse all";
-      });
-      k.away(t);
-      return t + 900;
+      k.away(t + 300);
+      return t + 1300;
     },
 
     /* ================= Chapters ================= */
@@ -5592,9 +5905,7 @@
     "learn-intro": function (k) {
       var kd = bookKind();
       var s = k.el(null, "td-search"); s.setAttribute("data-ph", "What are you stuck on?");
-      var cats = ["Story structure", "Character", "Scene & chapter", "Process & revision"];
-      if (kd === "story") cats = ["True stories"].concat(cats.slice(0, 3));
-      if (kd === "teach") cats = ["Teaching books", "Prose & voice", "On the page", "Process & revision"];
+      var cats = LIB_CATS.demo[kd] || LIB_CATS.demo.fiction;
       var box = k.el(null, "td-groups");
       var t = 300;
       cats.forEach(function (cat) {
@@ -5669,9 +5980,7 @@
     },
     "learn-browse": function (k) {
       var kd = bookKind();
-      var cats = kd === "teach" ? ["Teaching books", "Prose & voice", "Process & revision"]
-               : kd === "story" ? ["True stories", "Character", "Scene & chapter"]
-               : ["Character", "Story structure", "Scene & chapter"];
+      var cats = LIB_CATS.browse[kd] || LIB_CATS.browse.fiction;
       var box = k.el(null, "td-groups");
       var first = null, body = null, lesson = null, sum = null;
       cats.forEach(function (cat, i) {
@@ -5740,6 +6049,7 @@
       state.books = Array.isArray(d.books) ? d.books : null;
       state.series = Array.isArray(d.series) ? d.series : [];
       state.activeBook = d.activeBook || null;
+      state.student = d.student || null;
       if (d.map && typeof d.map === "object") {
         state.map = { nodes: Array.isArray(d.map.nodes) ? d.map.nodes : [],
                       edges: Array.isArray(d.map.edges) ? d.map.edges : [],
@@ -6067,6 +6377,7 @@
     el.lastChild.nodeValue = text;
   }
   function save() {
+    if (deviceClearing) return;
     /* courseCheck is called from the save tail, not here, to avoid recursion */
     setSaveState("saving", "Saving");
     if (saveTimer) clearTimeout(saveTimer);
@@ -6392,9 +6703,9 @@
     var kd = bookKind();
     GUIDE.forEach(function (g) {
       if (!g[1]) return;
-      if (g[3] === "True stories" && kd !== "story") return;
-      if (g[3] === "Teaching books" && kd !== "teach") return;
-      if (kd === "teach" && g[3] !== "Teaching books" && g[3] !== "Process & revision" && g[3] !== "Prose & voice") return;
+      if (g[3] === LIB_CATS.story && kd !== "story") return;
+      if (g[3] === LIB_CATS.teach && kd !== "teach") return;
+      if (kd === "teach" && g[3] !== LIB_CATS.teach && LIB_CATS.general.indexOf(g[3]) === -1) return;
       pool.push(g[1]);
     });
     REFERENCE.forEach(function (r) { if (r[1] && (r[3] || "fiction story").split(" ").indexOf(kd) !== -1) pool.push(r[1]); });
@@ -6711,7 +7022,7 @@
   function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
   /* Every string that should link to an entry: its name plus any aliases.
-     "Dravik" and "Dravik Ashenhold" can both point at the same card. */
+     "Maya" and "Maya Reyes" can both point at the same card. */
   function entryTerms(e) {
     var out = [], seen = {};
     var all = [e.name].concat(Array.isArray(e.aliases) ? e.aliases : []);
@@ -6737,8 +7048,8 @@
         if (!map[k]) { map[k] = e; names.push(n); }   /* first claim wins */
       });
     });
-    /* Longest first, so "Dravik Ashenhold" matches whole rather than
-       being split into the shorter "Dravik" alias plus loose text. */
+    /* Longest first, so "Maya Reyes" matches whole rather than
+       being split into the shorter "Maya" alias plus loose text. */
     names.sort(function (a, b) { return b.length - a.length; });
     var re = names.length ? new RegExp("\\b(" + names.map(escRe).join("|") + ")\\b", "gi") : null;
     _cdxCache = { map: map, names: names, re: re };
@@ -6863,10 +7174,10 @@
      and the chapters reach it through the ? beside each prompt. */
   var LIB = [];
   GUIDE.forEach(function (g) {
-    LIB.push({ src: "guide", title: g[0], sum: g[1], html: g[2], cat: g[3] || "Scene & chapter", kinds: "" });
+    LIB.push({ src: "guide", title: g[0], sum: g[1], html: g[2], cat: g[3] || LIB_CATS.order[0], kinds: "" });
   });
   REFERENCE.forEach(function (r) {
-    LIB.push({ src: "ref", title: r[0], sum: r[1], html: r[2], cat: "On the page", kinds: r[3] || "fiction story" });
+    LIB.push({ src: "ref", title: r[0], sum: r[1], html: r[2], cat: LIB_CATS.ref, kinds: r[3] || "fiction story" });
   });
   var LESSON_ITEM_HTML = '<button type="button" class="g-head"><div class="g-head-text"><div class="lr-src"></div><div class="g-k"></div><div class="g-d"></div></div><div class="g-chevron">⌄</div></button><div class="g-lesson"><div class="g-lesson-inner"></div></div>';
 
@@ -6875,9 +7186,7 @@
     /* Grouped by subject and closed to begin with. Seventy-six lessons in one
        open list is a wall; ten headings is a contents page. The order runs
        roughly from the largest decisions down to the sentence. */
-    var CAT_ORDER = ["Story structure", "Character", "Point of view",
-                     "Scene & chapter", "Prose & voice", "On the page", "World & theme",
-                     "Process & revision", "True stories", "Teaching books"];
+    var CAT_ORDER = LIB_CATS.order;
     var html = '<div class="learn-libhead"><div class="learn-label">All lessons</div>' +
                '<button type="button" class="tf-btn" id="guideFoldAll">Expand all</button></div>' +
                '<div class="g-count" id="guideCount">' + LIB.length + ' lessons, grouped by what they are about.</div>';
@@ -7127,13 +7436,13 @@
                   tagPhr: tagList.map(libPhrase).filter(function (x) { return x.all.length > 1 && x.content.length > 0; }) });
     });
     function sec(l, t) { return '<div class="g-sec"><div class="g-sec-label">' + l + '</div><p>' + libEsc(t) + '</p></div>'; }
-    var cname = { fiction: "Fiction course", story: "True story course", teach: "Teaching book course" };
+    var cname = LESSON_WORDS.courseNames;
     ["fiction", "story", "teach"].forEach(function (k) {
       COURSES[k].forEach(function (L, i) {
         var shared = COURSES.story[i] === COURSES.fiction[i] && COURSES.teach[i] === COURSES.fiction[i];
         if (shared && k !== "fiction") return;           /* the same lesson in all three: list it once */
-        var body = sec("The idea", L.idea) + (L.good ? sec("What good looks like", L.good) : "") +
-                   (L.wrong ? sec("Where people go wrong", L.wrong) : "");
+        var body = sec("The idea", L.idea) + (L.good ? sec(LESSON_WORDS.good, L.good) : "") +
+                   (L.wrong ? sec(LESSON_WORDS.wrong, L.wrong) : "");
         docs.push({ src: "course", kind: k, shared: shared, title: L.title, sum: libFirstSentence(L.idea), html: body,
                     cat: "", kinds: shared ? "fiction story teach" : k,
                     label: (shared ? "Every course" : cname[k]) + " · lesson " + (i + 1),
@@ -7149,7 +7458,14 @@
     for (var i = 0; i < docs.length; i++) if (docs[i].src !== "course" && docs[i].title === title) return docs[i];
     return null;
   }
-  function libHas(field, t) { return field.indexOf(" " + t) !== -1; }
+  /* Words match at the start of a word, so "end" finds "ending". A few short
+     words would then find the wrong thing ("mom" in "moment"), so those have
+     to match whole. */
+  var NOPREFIX = { mom: 1, mum: 1 };
+  function libHas(field, t) {
+    if (NOPREFIX[t]) return field.indexOf(" " + t + " ") !== -1 || field.indexOf(" " + t + "s ") !== -1;
+    return field.indexOf(" " + t) !== -1;
+  }
   function libFieldScore(d, t) {
     return (libHas(d.nt, t) ? 8 : 0) + (libHas(d.ng, t) ? 6 : 0) + (libHas(d.ns, t) ? 3 : 0) + (libHas(d.nb, t) ? 1 : 0);
   }
@@ -7159,9 +7475,9 @@
   function libKindFit(d, kind) {
     if (d.src === "course") return d.kinds.split(" ").indexOf(kind) !== -1 ? 0.9 : 0.6;
     if (d.src === "ref") return d.kinds.split(" ").indexOf(kind) !== -1 ? 1.1 : 0.8;
-    if (d.cat === "True stories") return kind === "story" ? 1.25 : 0.8;
-    if (d.cat === "Teaching books") return kind === "teach" ? 1.25 : 0.8;
-    if (kind === "teach" && d.cat !== "Process & revision" && d.cat !== "Prose & voice") return 0.8;
+    if (d.cat === LIB_CATS.story) return kind === "story" ? 1.25 : 0.8;
+    if (d.cat === LIB_CATS.teach) return kind === "teach" ? 1.25 : 0.8;
+    if (kind === "teach" && LIB_CATS.general.indexOf(d.cat) === -1) return 0.8;
     return 1;
   }
   function searchLessons(query) {
@@ -7298,7 +7614,7 @@
     learnRow(cl, c.enrolled ? "Continue your course" : "Start the course", kindInfo().name, where, function () { openCourse(); });
     ["fiction", "story", "teach"].forEach(function (k) {
       if (k === bookKind()) return;
-      learnRow(cl, "Read the lessons for " + KINDS[k].name.replace(/^A /, "a ").replace("Fiction", "fiction"),
+      learnRow(cl, "Read the lessons for " + LESSON_WORDS.readFor[k],
                "Open to read. Your own course stays where it is.", "", function () { openCourseBrowse(k); });
     });
   }
@@ -8733,10 +9049,12 @@
         var nx = nextMilestone();
         return nx ? nx.away + " to " + nx.m.name : "All earned"; } },
     { id: "learn", name: "Lessons & tutorials", val: function () { return kindInfo().name; } },
+    { id: "teachers", name: "For teachers", jrOnly: true, val: function () { return ""; } },
     { id: "general", name: "General", val: function () { return ""; } },
     { id: "backup", name: "Backup & Restore", val: function () {
         return fileSaveState === "linked" ? "File linked" : ""; } }
   ];
+  SET_CATS = SET_CATS.filter(function (c) { return !c.jrOnly || EDITION === "jr"; });
   var setPage = null;
 
   function openSetPage(id) {
@@ -8834,7 +9152,7 @@
     learnRow(ch, c.enrolled ? "Continue your course" : "Start the course", kindInfo().name, where, function () { openCourse(); });
     ["fiction", "story", "teach"].forEach(function (k) {
       if (k === bookKind()) return;
-      learnRow(ch, "Read the lessons for " + KINDS[k].name.replace(/^A /, "a ").replace("Fiction", "fiction"),
+      learnRow(ch, "Read the lessons for " + LESSON_WORDS.readFor[k],
                "Every lesson, open to read. Your own course stays where it is.", "", function () { openCourseBrowse(k); });
     });
     var sw = document.getElementById("tourAutoSwitch");
@@ -8863,8 +9181,76 @@
     });
   }
 
+  /* ---------- Printable lesson sheets ----------
+     Built from the course itself, so the sheets always match the lessons
+     students see in the app. One file per course, one lesson per page. */
+  function lessonSheetsHTML(kind) {
+    var list = COURSES[kind] || COURSE_F;
+    var esc = function (t) { return escHtml(String(t || "")); };
+    var name = LESSON_WORDS.courseNames[kind];
+    var html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>' + esc(name) + ' — lesson sheets</title><style>' +
+      'body{font-family:Georgia,"Times New Roman",serif;color:#1a1a1a;margin:0;padding:0;}' +
+      '.page{padding:48px 56px;page-break-after:always;break-after:page;max-width:720px;margin:0 auto;}' +
+      '.page:last-child{page-break-after:auto;break-after:auto;}' +
+      '.kick{font-family:Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#555;}' +
+      'h1{font-size:28px;margin:6px 0 18px;font-weight:normal;} h2{font-size:15px;font-family:Helvetica,Arial,sans-serif;margin:20px 0 4px;}' +
+      'p{font-size:15px;line-height:1.55;margin:0 0 8px;} .task{border:2px solid #1a1a1a;border-radius:10px;padding:12px 16px;margin-top:18px;}' +
+      '.lines div{border-bottom:1px solid #999;height:30px;} .toc li{font-size:15px;line-height:1.9;}' +
+      '.who{display:flex;gap:24px;font-family:Helvetica,Arial,sans-serif;font-size:13px;margin-bottom:22px;} .who span{flex:1;border-bottom:1px solid #999;padding-bottom:2px;}' +
+      '.hint{font-family:Helvetica,Arial,sans-serif;font-size:13px;background:#f1efe8;padding:10px 14px;border-radius:8px;margin:16px auto 0;max-width:720px;}' +
+      '@media screen{.page{border-bottom:2px dashed #bbb;} body{padding:0 16px;} .page{padding:32px 0;}}' +
+      '@media print{.page{padding:0;} .hint{display:none;}}</style></head><body>' +
+      '<div class="hint">Print this from your browser. Each lesson prints on its own page.</div>';
+    html += '<div class="page"><div class="kick">WriteNow Jr. · ' + esc(name) + '</div><h1>Lesson sheets</h1>' +
+            '<p>' + list.length + ' lessons, in order. Each page matches the lesson in the app.</p><ol class="toc">';
+    list.forEach(function (L) { html += '<li>' + esc(L.title) + (L.optional ? ' (optional)' : '') + '</li>'; });
+    html += '</ol></div>';
+    list.forEach(function (L, i) {
+      html += '<div class="page"><div class="who"><span>Name:</span><span>Date:</span></div>' +
+        '<div class="kick">Lesson ' + (i + 1) + ' · ' + esc(L.part) + '</div><h1>' + esc(L.title) + '</h1>' +
+        '<h2>The idea</h2><p>' + esc(L.idea) + '</p>' +
+        (L.good ? '<h2>For example</h2><p>' + esc(L.good) + '</p>' : '') +
+        (L.wrong ? '<h2>Watch out for</h2><p>' + esc(L.wrong) + '</p>' : '') +
+        '<div class="task"><h2 style="margin-top:0">Your turn</h2><p>' + esc(L.task) + '</p></div>' +
+        '<h2>Notes</h2><div class="lines"><div></div><div></div><div></div><div></div><div></div><div></div></div></div>';
+    });
+    return html + '</body></html>';
+  }
+  function renderTeachers() {
+    var host = document.getElementById("teacherSheets");
+    if (!host || EDITION !== "jr") return;
+    var dev = document.getElementById("teacherDevice");
+    dev.innerHTML = "";
+    learnRow(dev, "Students take turns on this device", sharedDevice() ? "On. Save and finish is at the top of the screen." : "Off. Work stays on this device.", "", function () {
+      if (sharedDevice()) setDeviceInfo({ shared: false });
+      else setDeviceInfo({ shared: true, active: deviceHasWork() });
+      applySharedChrome(); renderTeachers();
+    }, sharedDevice());
+    host.innerHTML = "";
+    var note = document.getElementById("teacherNote");
+    ["fiction", "story", "teach"].forEach(function (k) {
+      learnRow(host, LESSON_WORDS.courseNames[k], (COURSES[k] || []).length + " lessons, one per page", "", function () {
+        try {
+          var blob = new Blob([lessonSheetsHTML(k)], { type: "text/html" });
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "writenow-jr-" + { fiction: "story", story: "true-story", teach: "explain-it" }[k] + "-lesson-sheets.html";
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+          note.textContent = "Saved " + a.download + ". Open it and print from the browser.";
+          note.className = "set-note ok";
+        } catch (e) {
+          note.textContent = "This browser won't save files. Try it on a computer.";
+          note.className = "set-note err";
+        }
+      });
+    });
+  }
+
   function renderSettings() {
     renderLearn();
+    renderTeachers();
     var tr = document.getElementById("themeRow");
     tr.innerHTML = "";
 
@@ -9234,6 +9620,11 @@
     var out = JSON.parse(JSON.stringify(state));
     out.app = "chapter-guide";
     out.backupVersion = 1;
+    /* Which walkthroughs this writer has seen travels with their work, so a
+       student opening their file on a shared device is not walked through
+       every screen again. */
+    out.toursSeen = toursSeen();
+    try { out.tutorialSeen = !!localStorage.getItem(TUTORIAL_KEY); } catch (e) { out.tutorialSeen = false; }
     out.savedAt = new Date().toISOString();
     return JSON.stringify(out);
   }
@@ -9306,6 +9697,11 @@
       state.books = Array.isArray(d.books) ? d.books : null;
       state.series = Array.isArray(d.series) ? d.series : [];
       state.activeBook = d.activeBook || null;
+      state.student = d.student || null;
+      if (d.toursSeen && typeof d.toursSeen === "object") {
+        try { localStorage.setItem(TOURS_KEY, JSON.stringify(d.toursSeen)); } catch (e) {}
+      }
+      if (d.tutorialSeen) { try { localStorage.setItem(TUTORIAL_KEY, "1"); } catch (e) {} }
       state.map = (d.map && typeof d.map === "object")
         ? { nodes: Array.isArray(d.map.nodes) ? d.map.nodes : [], edges: Array.isArray(d.map.edges) ? d.map.edges : [],
             frames: Array.isArray(d.map.frames) ? d.map.frames : [], view: d.map.view || { x: 0, y: 0, z: 1 } }
@@ -9320,9 +9716,11 @@
         : "Restored: " + plural(state.chapters.length, "chapter") + " and " + plural(state.codex.length, "Codex entry", "Codex entries") + ".";
       note.className = "set-note ok";
       document.getElementById("restoreArea").value = "";
+      return true;
     } catch (e) {
       note.textContent = "Backup file unreadable \u2014 it may be truncated or from another app. Your current work is untouched.";
       note.className = "set-note err";
+      return false;
     }
   }
 
@@ -9734,11 +10132,18 @@
     }
     return out;
   }
-  function zoomNotes(id) {
+  function zoomNotes(id, write) {
     noteZoomId = id || null;
     activeNoteId = null;
     if (document.activeElement) document.activeElement.blur();
     renderOutliner();
+    if (write) {
+      var opened = findNode(id);
+      if (opened && !(opened.page || "").trim()) {
+        var ta = document.querySelector("#notePage textarea.note-page-body");
+        if (ta) { ta.style.display = "block"; ta.focus(); }
+      }
+    }
     var mast = document.querySelector(".masthead");
     var pad = (mast ? mast.getBoundingClientRect().height : 0) + 8;
     var crumbs = document.getElementById("noteCrumbs");
@@ -9762,16 +10167,28 @@
     /* Inside a branch the breadcrumb says where you are, so the hint above it
        would be a second voice answering a question nobody asked. */
     var hint = document.getElementById("mapHint");
-    /* With no notes there is nothing to swipe, and the empty state is already
-       doing the talking. With one or two, the gestures are worth a line. */
-    if (hint) hint.style.display = (here || !state.map.nodes.length) ? "none" : "";
-    var tools = document.getElementById("noteFoldAll"), cp = document.getElementById("noteCopy"), ad = document.getElementById("mapAdd");
+    /* With no notes the empty state is already doing the talking. */
+    if (hint) { hint.style.display = (here || !state.map.nodes.length) ? "none" : ""; hint.textContent = noteHintText(); }
+    var more = document.getElementById("noteMore"), ad = document.getElementById("mapAdd");
     var bare = !state.map.nodes.length;
-    if (tools) tools.style.display = bare ? "none" : "";
-    if (cp) cp.style.display = bare ? "none" : "";
+    if (more) more.style.display = bare ? "none" : "";
     if (ad) ad.style.display = bare ? "none" : "";
+    var plan = document.getElementById("notesPlanGo");
+    if (plan) plan.style.display = (EDITION === "jr" && notePlan()) ? "" : "none";
     if (!here) { el.hidden = true; return; }
     el.hidden = false;
+
+    /* Back is a real button, labelled, one level up. The path beside it says
+       where you are and lets you jump further. */
+    var back = document.createElement("button");
+    back.type = "button";
+    back.className = "note-back";
+    back.id = "noteBack";
+    back.textContent = "\u2039 Back";
+    var up = here.parentId ? findNode(here.parentId) : null;
+    back.setAttribute("aria-label", "Back to " + (up ? firstLine(up.text) || "the note above" : "all notes"));
+    back.addEventListener("click", function () { zoomOut(); });
+    el.appendChild(back);
 
     function crumb(label, id) {
       var b = document.createElement("button");
@@ -9793,10 +10210,100 @@
     notePath(noteZoomId).forEach(function (p) {
       sep(); crumb(firstLine(p.text) || "Untitled", p.id);
     });
-    var h = document.createElement("div");
-    h.className = "crumb-here";
-    h.textContent = firstLine(here.text) || "Untitled";
-    el.appendChild(h);
+  }
+
+  /* ---------- An open note is a page ----------
+     Its title at the top, editable. Under it, room to write: Return makes a
+     new line here, not a new note, because this is where a note gets to be
+     longer than a line. Then the notes inside it, with every control the
+     main list has. Rebuilt only when a different note is opened, so typing
+     here is never interrupted by the list redrawing underneath. */
+  var notePageFor = null;
+  function renderNotePage() {
+    var host = document.getElementById("notePage");
+    if (!host) return;
+    var here = noteZoomId ? findNode(noteZoomId) : null;
+    if (!here) { host.hidden = true; host.innerHTML = ""; notePageFor = null; return; }
+    host.hidden = false;
+    if (notePageFor === here.id && host.firstChild) {
+      var t0 = host.querySelector(".note-page-title");
+      if (t0 && document.activeElement !== t0 && t0.value !== (here.text || "")) { t0.value = here.text || ""; growTitle(t0); }
+      setPageLabel(host, here);
+      return;
+    }
+    notePageFor = here.id;
+    host.innerHTML = "";
+    var title = document.createElement("textarea");
+    title.className = "note-page-title";
+    title.id = "notePageTitle";
+    title.rows = 1;
+    title.placeholder = "Untitled";
+    title.setAttribute("aria-label", "Note title");
+    title.value = here.text || "";
+    title.addEventListener("input", function () { here.text = title.value; growTitle(title); save(); });
+    /* Return in the title moves on to the writing below it. */
+    title.addEventListener("keydown", function (ev) {
+      if (ev.key !== "Enter") return;
+      ev.preventDefault();
+      var pv0 = host.querySelector(".rich-view.note-page-body"), ta0 = host.querySelector("textarea.note-page-body");
+      if (pv0 && pv0.style.display !== "none") pv0.click(); else if (ta0) ta0.focus();
+    });
+    title.addEventListener("focus", leaveRows);
+    host.appendChild(title);
+    var body = mkRichArea("note-page-body", "Write here. Return starts a new line.",
+      function () { return here.page || ""; }, function (v) { here.page = v; });
+    body.addEventListener("focusin", leaveRows);
+    host.appendChild(body);
+    var lbl = document.createElement("div");
+    lbl.className = "note-page-label";
+    host.appendChild(lbl);
+    setPageLabel(host, here);
+    setTimeout(function () { growTitle(title); }, 0);
+  }
+  function setPageLabel(host, here) {
+    var lbl = host.querySelector(".note-page-label");
+    if (!lbl) return;
+    var k = children(here.id).length;
+    lbl.textContent = k ? "Notes inside" : "";
+    lbl.style.display = k ? "" : "none";
+  }
+  function growTitle(t) { t.style.height = "0px"; t.style.height = t.scrollHeight + "px"; }
+  /* Writing on the page means you are not working on a row any more. */
+  function leaveRows() {
+    if (!activeNoteId) return;
+    activeNoteId = null;
+    renderOutliner();
+  }
+
+  /* What to do, in the words of the device you are on: a touchscreen has
+     Return and taps, a laptop has Enter, Tab and a pointer. */
+  function noteHintText() {
+    var touch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    return touch ? "Tap a note to write. Return starts the next one."
+                 : "Click a note to write. Enter starts the next one, and Tab moves it in.";
+  }
+
+  /* ---------- How deep notes go ----------
+     WriteNow Jr. stops at three levels. Classroom plans are two levels deep,
+     and past three is where a student loses track of what is inside what. */
+  var NOTE_LEVELS = EDITION === "jr" ? 3 : 0;
+  function noteDepth(id) {
+    var d = 0, n = findNode(id), guard = 0;
+    while (n && n.parentId && guard++ < 200) { d++; n = findNode(n.parentId); }
+    return d;
+  }
+  function noteHeight(id) {
+    var h = 0;
+    children(id).forEach(function (k) { h = Math.max(h, 1 + noteHeight(k.id)); });
+    return h;
+  }
+  function noteFitsUnder(node, parentId) {
+    if (!NOTE_LEVELS) return true;
+    var d = parentId ? noteDepth(parentId) + 1 : 0;
+    return d + noteHeight(node.id) <= NOTE_LEVELS - 1;
+  }
+  function noteDepthWarn() {
+    noteToast("Notes go three levels deep. That's plenty for a plan.");
   }
 
   function outlineRows() {
@@ -9810,6 +10317,42 @@
         })(r, 0);
       });
     return out;
+  }
+
+  /* ---------- Starting from a plan (WriteNow Jr.) ----------
+     The shapes teachers use for planning, ready-made: labelled parts with a
+     question under each in grey. The questions are prompts, not notes, so
+     they vanish the moment the student starts typing. */
+  var NOTE_PLANS = {
+    fiction: [["Beginning", ["Who is it about?", "What do they want?"]],
+              ["Middle", ["What gets in the way?", "How does it get worse?"]],
+              ["End", ["How does it turn out?", "What's different now?"]]],
+    story: [["Before", ["Where and when was it?", "What did you want?"]],
+            ["The moment", ["What happened, moment by moment?"]],
+            ["After", ["How did it end?"]],
+            ["What I understand now", ["What do you know now that you didn't then?"]]],
+    teach: [["Main point", ["What will your reader know, believe or be able to do?"]],
+            ["First reason or step", ["Explain it, then give an example."]],
+            ["Second reason or step", ["Explain it, then give an example."]],
+            ["Third reason or step", ["Explain it, then give an example."]],
+            ["Ending", ["What should your reader remember or do next?"]]]
+  };
+  function notePlan() { return EDITION === "jr" ? NOTE_PLANS[bookKind()] || NOTE_PLANS.fiction : null; }
+  function addNotePlan() {
+    var plan = notePlan();
+    if (!plan) return;
+    noteZoomId = null;
+    var first = null, base = roots().length;
+    plan.forEach(function (part, i) {
+      var h = { id: uid(), parentId: null, order: base + i, text: part[0], check: false, done: false, collapsed: false };
+      state.map.nodes.push(h);
+      part[1].forEach(function (q, j) {
+        var c = { id: uid(), parentId: h.id, order: j, text: "", hint: q, check: false, done: false, collapsed: false };
+        state.map.nodes.push(c);
+        if (!first) first = c;
+      });
+    });
+    save(); renderOutliner(first ? first.id : null);
   }
 
   function addNoteUnder(parent) {
@@ -9840,6 +10383,7 @@
     var idx = sibs.map(function (x) { return x.id; }).indexOf(node.id);
     if (idx <= 0) return false;
     var newParent = sibs[idx - 1];
+    if (!noteFitsUnder(node, newParent.id)) { noteDepthWarn(); return false; }
     node.parentId = newParent.id;
     node.order = children(newParent.id).length;
     newParent.collapsed = false;
@@ -9866,10 +10410,48 @@
   function deleteNote(node) {
     var doomed = {};
     (function mark(id) { doomed[id] = 1; children(id).forEach(function (k) { mark(k.id); }); })(node.id);
+    /* Everything needed to put it back exactly where it was. */
+    var undo = {
+      nodes: state.map.nodes.filter(function (n) { return doomed[n.id]; }),
+      edges: (state.map.edges || []).filter(function (e) { return doomed[e.from] || doomed[e.to]; }),
+      parentId: node.parentId || null,
+      index: children(node.parentId || null).map(function (x) { return String(x.id); }).indexOf(String(node.id)),
+      node: node
+    };
     state.map.nodes = state.map.nodes.filter(function (n) { return !doomed[n.id]; });
     state.map.edges = (state.map.edges || []).filter(function (e) { return !doomed[e.from] && !doomed[e.to]; });
     renumberSiblings(node.parentId || null);
+    if (activeNoteId && doomed[activeNoteId]) activeNoteId = null;
     save(); renderOutliner();
+    var count = undo.nodes.length - 1;
+    var name = firstLine(node.text);
+    noteToast("Deleted " + (name ? "\u201c" + (name.length > 28 ? name.slice(0, 28) + "\u2026" : name) + "\u201d" : "a note") +
+              (count ? " and " + count + (count === 1 ? " note" : " notes") + " under it." : "."), function () {
+      /* Its parent may have gone since; then it comes back at the top. */
+      var pid = undo.parentId && findNode(undo.parentId) ? undo.parentId : null;
+      undo.nodes.forEach(function (n) { if (!findNode(n.id)) state.map.nodes.push(n); });
+      state.map.edges = (state.map.edges || []).concat(undo.edges);
+      var sibs = children(pid).filter(function (x) { return String(x.id) !== String(undo.node.id); });
+      sibs.splice(Math.max(0, Math.min(undo.index < 0 ? sibs.length : undo.index, sibs.length)), 0, undo.node);
+      undo.node.parentId = pid;
+      sibs.forEach(function (x, i) { x.order = i; });
+      if (pid) { var pp = findNode(pid); if (pp) pp.collapsed = false; }
+      save(); renderOutliner();
+      haptic("tap");
+    });
+  }
+  /* A short message at the top of the screen, with Undo when there is
+     something to undo. */
+  function noteToast(msg, undoFn) {
+    var t = document.getElementById("noteToast");
+    if (!t) return;
+    t.querySelector(".nt-text").textContent = msg;
+    var b = document.getElementById("noteUndo");
+    b.style.display = undoFn ? "" : "none";
+    b.onclick = function () { t.classList.remove("show"); clearTimeout(t._h); if (undoFn) undoFn(); };
+    t.classList.add("show");
+    clearTimeout(t._h);
+    t._h = setTimeout(function () { t.classList.remove("show"); }, undoFn ? 8000 : 3800);
   }
   /* ---------- Moving a note ----------
      The outliner could change a note's depth but never its order, so a note
@@ -9894,6 +10476,7 @@
        dropping it exactly where it already sits. */
     if (newParentId && (String(newParentId) === String(node.id) ||
         isDescendant(node.id, newParentId))) return false;
+    if (!noteFitsUnder(node, newParentId)) return false;
 
     var oldParent = node.parentId || null;
     var sibs = children(newParentId).filter(function (x) { return String(x.id) !== String(node.id); });
@@ -10028,6 +10611,7 @@
     NOTE_DRAG.moved = true;
     var dx = x - NOTE_DRAG.startX;
     var wantDepth = NOTE_DRAG.baseDepth + Math.round(dx / NOTE_INDENT_PX);
+    if (NOTE_LEVELS) wantDepth = Math.min(wantDepth, NOTE_LEVELS - 1 - noteHeight(NOTE_DRAG.node.id));
     var t = noteDropTarget(NOTE_DRAG.rows, y, wantDepth);
     NOTE_DRAG.target = t;
     NOTE_DRAG.rowEl.style.transform = "translateY(" + (y - NOTE_DRAG.startY) + "px)";
@@ -10194,23 +10778,32 @@
       bar.appendChild(b);
       return b;
     }
-    tool("+ After", "Add a note after this one", function () { addSiblingAfter(n); });
-    tool(n.check ? "Plain" : "Checkbox",
-         n.check ? "Turn back into a plain note" : "Turn into a checkbox", function () {
-      n.check = !n.check; if (!n.check) n.done = false; save(); renderOutliner(n.id);
+    /* The two moves an outline is built from come first and are always in
+       sight. Swipe and Tab do the same, for anyone who knows them. */
+    var sibs = children(n.parentId), at = sibs.indexOf(n);
+    function then(ok) { if (ok !== false) { save(); renderOutliner(n.id); } }
+    var canOut = !!n.parentId && !(noteZoomId && String(n.parentId) === String(noteZoomId));
+    var canIn = at > 0 && noteFitsUnder(n, sibs[at - 1].id);
+    var outB = tool("\u2039 Out", "Move out one level", function () { then(outdentNote(n)); });
+    outB.disabled = !canOut;
+    var inB = tool("In \u203a", "Move in, under the note above", function () {
+      if (at > 0 && !noteFitsUnder(n, sibs[at - 1].id)) { noteDepthWarn(); return; }
+      then(indentNote(n));
     });
-    /* Everything a gesture does, a button also does. Swipes and holds are
-       fast once you know them and invisible until you do. */
-    var moreB = tool("Move", "Move, nest or open this note", function () {
-      var sibs = children(n.parentId), at = sibs.indexOf(n);
-      function then(ok) { if (ok !== false) { save(); renderOutliner(n.id); } }
+    inB.disabled = at <= 0;
+    if (at > 0 && !canIn) inB.classList.add("at-limit");
+    function toggleCheck() { n.check = !n.check; if (!n.check) n.done = false; save(); renderOutliner(n.id); }
+    /* Open gives the note a page: room to write, and notes of its own. */
+    tool("Open", "Open this note to write in it", function () { zoomNotes(n.id, true); });
+    tool(n.check ? "Plain" : "Checkbox", n.check ? "Turn back into a plain note" : "Turn into a checkbox", toggleCheck, "nb-wide");
+    var moreB = tool("More", "More for this note", function () {
+      var narrow = window.matchMedia && window.matchMedia("(max-width: 419px)").matches;
+      var tiny = window.matchMedia && window.matchMedia("(max-width: 370px)").matches;
       openMenu(moreB, [
-        { label: "Nest under the note above", disabled: at <= 0, run: function () { then(indentNote(n)); } },
-        { label: "Pull out one level", disabled: !n.parentId || (noteZoomId && String(n.parentId) === String(noteZoomId)),
-          run: function () { then(outdentNote(n)); } },
+        narrow ? { label: n.check ? "Make it a plain note" : "Make it a checkbox", run: toggleCheck } : null,
         { label: "Move up", disabled: at <= 0, run: function () { then(moveNoteBy(n, -1)); } },
         { label: "Move down", disabled: at === sibs.length - 1, run: function () { then(moveNoteBy(n, 1)); } },
-        { label: "Open this branch on its own", run: function () { zoomNotes(n.id); } }
+        tiny ? { label: "Delete", danger: true, run: function () { deleteNote(n); } } : null
       ]);
     });
     moreB.setAttribute("aria-haspopup", "menu");
@@ -10223,7 +10816,7 @@
         return;
       }
       deleteNote(n);
-    }, "danger");
+    }, "danger nb-mid");
 
     var done = document.createElement("button");
     done.type = "button";
@@ -10238,7 +10831,24 @@
     bar.appendChild(done);
     bar.classList.add("open");
     document.body.classList.add("note-bar-open");
+    placeNoteBar();
   }
+  /* On a wide screen the bar follows the note: just under it, lined up with
+     its right edge, so the tools are where your eyes already are. */
+  function placeNoteBar() {
+    var bar = document.getElementById("noteBar");
+    if (!bar || !bar.classList.contains("open")) return;
+    var near = window.innerWidth >= 700;
+    document.body.classList.toggle("nb-near", near);
+    if (!near) { bar.style.top = ""; bar.style.left = ""; return; }
+    var row = document.querySelector('.note-row[data-id="' + activeNoteId + '"]');
+    if (!row) return;
+    var r = row.getBoundingClientRect(), w = bar.offsetWidth;
+    var left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));
+    bar.style.top = Math.round(r.bottom + window.scrollY + 6) + "px";
+    bar.style.left = Math.round(left + window.scrollX) + "px";
+  }
+  window.addEventListener("resize", function () { placeNoteBar(); });
 
   function renderOutliner(focusId) {
     var host = document.getElementById("notesList");
@@ -10250,6 +10860,7 @@
     host.innerHTML = "";
     var rows = outlineRows();
     renderNoteCrumbs();
+    renderNotePage();
     var empty = document.getElementById("notesEmpty");
     /* The full empty state is a welcome; inside a branch it would be a lie,
        because there are plenty of notes — just none under this one. */
@@ -10257,7 +10868,10 @@
     if (!rows.length && noteZoomId) {
       var be = document.createElement("div");
       be.className = "note-branch-empty";
-      be.textContent = "Nothing under this note yet. + Note starts the first one.";
+      var zn = findNode(noteZoomId);
+      be.textContent = zn && NOTE_LEVELS && noteDepth(zn.id) >= NOTE_LEVELS - 1
+        ? "This note can't hold more notes, but you can write in it as much as you like."
+        : "No notes inside yet. + Note adds one.";
       host.appendChild(be);
     }
 
@@ -10273,40 +10887,29 @@
       var head = document.createElement("div");
       head.className = "note-head";
 
-      /* The caret folds and nothing else. A leaf keeps its width so the
-         bullets stay in a column. */
-      var caret = document.createElement("button");
-      caret.type = "button";
-      caret.className = "note-caret" + (kids ? "" : " leaf");
-      if (kids) {
-        setIcon(caret, "fold");
-        caret.style.transform = n.collapsed ? "none" : "rotate(90deg)";
-      }
-      if (kids) {
-        caret.setAttribute("aria-expanded", n.collapsed ? "false" : "true");
-        caret.setAttribute("aria-label", (n.collapsed ? "Expand " : "Collapse ") + subtreeSize(n.id) + " notes under this one");
-        caret.addEventListener("click", function (ev) {
-          ev.stopPropagation();
-          n.collapsed = !n.collapsed; save(); renderOutliner();
-        });
-      } else {
-        caret.setAttribute("aria-hidden", "true");
-        caret.tabIndex = -1;
-      }
-      head.appendChild(caret);
-
-      /* The bullet: tap to make this note the top of the list, hold to move
-         it. Both gestures live here so the caret keeps its single meaning. */
+      /* The bullet is the row's one control. With notes inside it wears a
+         ring, and tapping it folds them away or brings them back. Without,
+         a tap just opens the note. Holding it picks the note up to move it.
+         Opening a branch on its own lives in the bar's More menu, where it is
+         named, instead of on a dot that looks like decoration. */
       var bullet = document.createElement("button");
       bullet.type = "button";
-      bullet.className = "note-bullet" + (kids ? " has-kids" : "");
+      bullet.className = "note-bullet" + (kids ? " has-kids" + (n.collapsed ? " folded" : "") : "");
       bullet.innerHTML = "<i></i>";
-      bullet.title = "Tap to zoom in \u00b7 hold to move";
-      bullet.setAttribute("aria-label", "Zoom into this note" + (kids ? ", " + subtreeSize(n.id) + " inside" : ""));
+      if (kids) {
+        bullet.title = n.collapsed ? "Show the notes inside" : "Fold the notes inside";
+        bullet.setAttribute("aria-expanded", n.collapsed ? "false" : "true");
+        bullet.setAttribute("aria-label", (n.collapsed ? "Show " : "Fold ") + subtreeSize(n.id) + (subtreeSize(n.id) === 1 ? " note" : " notes") + " under this one");
+      } else {
+        bullet.title = "Hold to move";
+        bullet.setAttribute("aria-hidden", "true");
+        bullet.tabIndex = -1;
+      }
       bullet.addEventListener("click", function (ev) {
         ev.stopPropagation();
         if (NOTE_DRAG) return;
-        zoomNotes(n.id);
+        if (kids) { n.collapsed = !n.collapsed; save(); renderOutliner(); haptic("tap"); }
+        else { activeNoteId = n.id; renderOutliner(n.id); }
       });
       wireNoteDrag(bullet, n, item);
       head.appendChild(bullet);
@@ -10323,21 +10926,23 @@
 
       var textWrap = document.createElement("div");
       textWrap.className = "note-text" + (n.check && n.done ? " done" : "");
-      textWrap.appendChild(mkRichArea("note-body", "\u2026",
+      textWrap.appendChild(mkRichArea("note-body", n.hint || "\u2026",
         function () { return n.text || ""; },
         function (v) { n.text = v; }));
       head.appendChild(textWrap);
 
-      var addBtn = document.createElement("button");
-      addBtn.type = "button";
-      addBtn.className = "note-add";
-      addBtn.textContent = "+";
-      addBtn.title = "Add a note underneath";
-      addBtn.setAttribute("aria-label", "Add a note underneath this one");
-      addBtn.addEventListener("click", function (ev) { ev.stopPropagation(); addNoteUnder(n); });
-      head.appendChild(addBtn);
 
       item.appendChild(head);
+
+      if ((n.page || "").trim()) {
+        var peek = document.createElement("button");
+        peek.type = "button";
+        peek.className = "note-peek";
+        peek.textContent = n.page.trim().split("\n")[0];
+        peek.setAttribute("aria-label", "Open this note to read what is written in it");
+        peek.addEventListener("click", function (ev) { ev.stopPropagation(); zoomNotes(n.id); });
+        item.appendChild(peek);
+      }
 
       if (kids && n.collapsed) {
         var cnt = document.createElement("div");
@@ -10346,9 +10951,10 @@
         item.appendChild(cnt);
       }
 
-      /* Links to notes elsewhere in the outline. Kept from the old canvas, but
-         shown as plain references rather than drawn lines. */
-      var linked = (state.map.edges || []).filter(function (e) {
+      /* Links to notes elsewhere came from the old canvas, and nothing makes
+         new ones now. They stay in the saved data, out of sight, rather than
+         showing a feature nobody can use. */
+      var linked = [].filter(function (e) {
         return String(e.from) === String(n.id) || String(e.to) === String(n.id);
       });
       if (linked.length) {
@@ -10394,6 +11000,14 @@
       host.appendChild(item);
     });
 
+    /* An empty note is measured before it is on the page, which made it 8px
+       tall with its prompt cut off. Size empty ones to their prompt now. */
+    Array.prototype.forEach.call(host.querySelectorAll(".note-row textarea"), function (ta) {
+      if (ta.style.display === "none" || ta.value) return;
+      ta.style.overflowY = "hidden"; ta.style.height = "0px";
+      ta.value = ta.placeholder; var h = ta.scrollHeight; ta.value = "";
+      ta.style.height = h + "px";
+    });
     renderNoteBar();
 
     if (focusId) {
@@ -10447,7 +11061,7 @@
       var t = (row.node.text || "").split("\n");
       var bullet = row.node.check ? (row.node.done ? "[x] " : "[ ] ") : "\u2022 ";
       lines.push(new Array(row.depth + 1).join("    ") + bullet + (t[0] || ""));
-      t.slice(1).forEach(function (extra) {
+      t.slice(1).concat((row.node.page || "").split("\n")).forEach(function (extra) {
         if (extra.trim()) lines.push(new Array(row.depth + 2).join("    ") + extra);
       });
     });
@@ -10505,7 +11119,9 @@
     add.addEventListener("click", function () {
       /* Inside a branch, a new note belongs to that branch, not to the top of
          an outline you can't currently see. */
-      addNoteUnder(noteZoomId ? findNode(noteZoomId) : null);
+      var into = noteZoomId ? findNode(noteZoomId) : null;
+      if (into && NOTE_LEVELS && noteDepth(into.id) >= NOTE_LEVELS - 1) { noteDepthWarn(); return; }
+      addNoteUnder(into);
     });
 
     /* Escape climbs out one level, the way it does in every outliner that
@@ -10518,6 +11134,23 @@
       ev.preventDefault();
       zoomOut();
     });
+
+    var moreTop = document.getElementById("noteMore");
+    moreTop.addEventListener("click", function () {
+      var scope = noteZoomId ? outlineRowsAll().map(function (r) { return r.node; }) : state.map.nodes;
+      var anyOpen = scope.some(function (n) { return !n.collapsed && children(n.id).length; });
+      var anyKids = scope.some(function (n) { return children(n.id).length; });
+      openMenu(moreTop, [
+        { label: anyOpen || !anyKids ? "Fold everything" : "Unfold everything", disabled: !anyKids,
+          run: function () { document.getElementById("noteFoldAll").click(); } },
+        { label: "Copy outline", run: function () { document.getElementById("noteCopy").click(); } },
+        EDITION === "jr" && notePlan() ? { label: "Add a plan", run: addNotePlan } : null
+      ]);
+    });
+    var planGo = document.getElementById("notesPlanGo");
+    if (planGo) planGo.addEventListener("click", addNotePlan);
+    /* Typing can make the open note taller; the bar under it follows. */
+    document.getElementById("notesList").addEventListener("input", function () { placeNoteBar(); });
 
     document.getElementById("noteFoldAll").addEventListener("click", function () {
       var scope = noteZoomId
@@ -10637,19 +11270,29 @@
       if (b) b.scrollIntoView({ behavior: REDUCED_MOTION ? "auto" : "smooth", block: "center" });
     }, 120);
   });
+  /* Taking the book out of the app, by any of the three buttons, is what the
+     "finish it" lesson asks for, so record it and let the save run the check. */
+  function markExported() {
+    var c = course();
+    if (c.exported) return;
+    c.exported = true;
+    save();
+  }
   document.getElementById("bookCopy").addEventListener("click", function () {
     var note = document.getElementById("bookNote");
     var txt = bookText("txt");
-    var done = function () { note.textContent = "Manuscript copied \u2014 " + wordsOf(txt).toLocaleString() + " words."; note.className = "set-note ok"; };
+    var done = function () { markExported(); note.textContent = "Manuscript copied \u2014 " + wordsOf(txt).toLocaleString() + " words."; note.className = "set-note ok"; };
     var failed = function () { note.textContent = "The clipboard didn't respond. Try Download instead."; note.className = "set-note err"; };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function () { fallbackCopy(txt, done, failed); });
     else fallbackCopy(txt, done, failed);
   });
   document.getElementById("bookDownload").addEventListener("click", function () {
     downloadFile(safeName("md"), bookText("md"), "text/markdown");
+    markExported();
   });
   document.getElementById("bookHtml").addEventListener("click", function () {
     downloadFile(safeName("html"), bookHtmlDoc(), "text/html");
+    markExported();
   });
   document.getElementById("bookOnlyDrafted").addEventListener("change", renderBook);
   document.getElementById("bookNumbers").addEventListener("change", renderBook);
@@ -11611,6 +12254,7 @@
     state.books = Array.isArray(d.books) ? d.books : null;
     state.series = Array.isArray(d.series) ? d.series : [];
     state.activeBook = d.activeBook || null;
+    state.student = d.student || null;
     if (d.map && typeof d.map === "object") {
       state.map = { nodes: Array.isArray(d.map.nodes) ? d.map.nodes : [],
                     edges: Array.isArray(d.map.edges) ? d.map.edges : [],
@@ -11652,6 +12296,7 @@
      exceeds the 17px design reference, so the app grows with the reader's
      chosen text size but never shrinks below the size it was drawn at — which
      would otherwise push 11px labels under the legibility floor. */
+  var BASE_FONT = 17;   /* the floor; matches html { font-size } in the stylesheet */
   function applyDynamicType() {
     var probe = document.createElement("span");
     probe.setAttribute("aria-hidden", "true");
@@ -11659,8 +12304,8 @@
     document.documentElement.appendChild(probe);
     var sz = parseFloat(getComputedStyle(probe).fontSize);
     probe.parentNode.removeChild(probe);
-    if (!sz || !isFinite(sz)) sz = 17;
-    document.documentElement.style.fontSize = Math.max(17, sz) + "px";
+    if (!sz || !isFinite(sz)) sz = BASE_FONT;
+    document.documentElement.style.fontSize = Math.max(BASE_FONT, sz) + "px";
   }
   applyDynamicType();
   window.addEventListener("resize", function () { applyDynamicType(); });
@@ -12110,7 +12755,9 @@
       var seededOnce = localStorage.getItem(SEEDED_FLAG);
       var isNewUser = state.chapters.length === 0 && state.codex.length === 0 &&
                       state.ledger.length === 0 && state.map.nodes.length === 0;
-      if (!seededOnce && isNewUser) {
+      if (sharedGatePending()) {
+        setTimeout(sharedBoot, 200);
+      } else if (!seededOnce && isNewUser) {
         setTimeout(openTour, 260);
       }
     } catch (e) {}

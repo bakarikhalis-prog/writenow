@@ -9,7 +9,8 @@ self.addEventListener("install", function (e) {
 });
 self.addEventListener("activate", function (e) {
   e.waitUntil(caches.keys().then(function (ns) {
-    return Promise.all(ns.filter(function (n) { return n !== CACHE_NAME; })
+    /* Only this app's own old caches: WriteNow Jr. can live on the same site. */
+    return Promise.all(ns.filter(function (n) { return n !== CACHE_NAME && /^writenow-v\d+$/.test(n); })
       .map(function (n) { return caches.delete(n); }));
   }).then(function () { return self.clients.claim(); }));
 });
